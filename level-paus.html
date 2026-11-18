@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NURVA - Level Paus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EAF3FF;--surface:#FFFFFF;--primary:#2E6BF2;--primary-dark:#17399E;--primary-light:#E6EFFE;
+    --success:#2FA872;--success-dark:#1F7C54;--success-bg:#E3F6EC;
+    --warning:#F0A93E;--warning-dark:#B0700E;--warning-bg:#FFF2DD;
+    --text:#182338;--muted:#6C7A93;--border:#E2EAF8;
+    --radius-lg:24px;--radius-md:16px;
+    --shadow:0 12px 30px rgba(23,57,158,0.09);--shadow-sm:0 4px 12px rgba(23,57,158,0.06);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);padding-bottom:60px;position:relative;overflow-x:hidden;}
+  body::before,body::after{content:'';position:fixed;border-radius:50%;filter:blur(60px);pointer-events:none;z-index:0;}
+  body::before{width:260px;height:260px;background:var(--success);opacity:.10;top:-60px;right:-80px;}
+  body::after{width:280px;height:280px;background:var(--warning);opacity:.08;bottom:20px;left:-100px;}
+  h1,h2,h3,h4{font-family:'Baloo 2',sans-serif;margin:0;}
+  .wrap{max-width:520px;margin:0 auto;padding:0 18px;position:relative;z-index:1;}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+  .fu{animation:fadeUp .55s cubic-bezier(.2,.7,.3,1) both;}
+
+  .hero{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);border-radius:0 0 32px 32px;padding:18px 18px 66px;position:relative;overflow:hidden;box-shadow:0 14px 30px rgba(23,57,158,0.22);}
+  .hero-inner{max-width:520px;margin:0 auto;position:relative;z-index:1;}
+  .topbar{display:flex;align-items:center;gap:12px;}
+  .back-btn{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;text-decoration:none;flex-shrink:0;}
+  .back-btn:hover{background:rgba(255,255,255,0.25);}
+  .hero-title{color:#fff;font-size:20px;}
+  .lang-switch{position:relative;margin-left:auto;}
+  .lang-btn{display:flex;align-items:center;gap:5px;border:1px solid rgba(255,255,255,0.35);background:rgba(255,255,255,0.1);color:#fff;font-size:12px;font-weight:700;padding:7px 11px;border-radius:999px;cursor:pointer;}
+  .lang-menu{display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border-radius:16px;box-shadow:var(--shadow);border:1px solid var(--border);padding:6px;min-width:190px;z-index:20;}
+  .lang-menu.open{display:block;}
+  .lang-option{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 11px;border-radius:11px;font-size:12.5px;font-weight:600;color:var(--text);cursor:pointer;}
+  .lang-option:hover{background:var(--primary-light);}
+  .lang-option.active{background:var(--primary-light);color:var(--primary-dark);}
+  .lang-option.disabled{color:var(--muted);cursor:not-allowed;}
+  .lang-soon{font-size:9px;font-weight:700;background:var(--warning-bg);color:var(--warning-dark);padding:2px 6px;border-radius:999px;}
+  .hero-sub{color:rgba(255,255,255,.82);font-size:12.5px;font-weight:500;margin:10px 0 0;max-width:340px;}
+  .overlap{margin-top:-52px;}
+
+  /* ---------- Whale stage ---------- */
+  .stage-card{background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow);border:1px solid var(--border);padding:22px 18px 20px;margin-bottom:16px;text-align:center;overflow:hidden;position:relative;}
+  .stage-bg{position:absolute;inset:0;background:radial-gradient(circle at 50% 30%,var(--primary-light) 0%,rgba(230,239,254,0) 70%);pointer-events:none;}
+  .level-pill{display:inline-flex;align-items:center;gap:6px;background:var(--primary-light);color:var(--primary-dark);font-weight:800;font-size:12.5px;padding:6px 14px;border-radius:999px;font-family:'Baloo 2',sans-serif;position:relative;z-index:1;}
+  .whale-float{height:190px;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;animation:floaty 3.2s ease-in-out infinite;}
+  @keyframes floaty{0%,100%{transform:translateY(0);}50%{transform:translateY(-9px);}}
+  .whale-scale{transition:transform .55s cubic-bezier(.3,1.5,.4,1);transform-origin:center bottom;}
+  .whale-scale.pop{animation:pop .6s cubic-bezier(.3,1.7,.4,1);}
+  @keyframes pop{0%{transform:scale(var(--lvl-scale));}40%{transform:scale(calc(var(--lvl-scale) * 1.22));}100%{transform:scale(var(--lvl-scale));}}
+  .whale-svg{width:210px;height:150px;overflow:visible;}
+  .accessory{opacity:0;transition:opacity .4s ease;}
+  .accessory.show{opacity:1;}
+  .bubble{animation:bubbleUp 2.6s ease-in-out infinite;}
+  .bubble:nth-child(2){animation-delay:.5s;}
+  .bubble:nth-child(3){animation-delay:1s;}
+  @keyframes bubbleUp{0%{transform:translateY(0);opacity:.9;}100%{transform:translateY(-22px);opacity:0;}}
+  .sparkle-orbit{animation:spin 8s linear infinite;transform-origin:120px 85px;}
+  @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+
+  .level-name{font-family:'Baloo 2',sans-serif;font-size:20px;font-weight:800;margin-top:6px;position:relative;z-index:1;}
+  .level-desc{font-size:12.5px;color:var(--muted);font-weight:500;margin-top:3px;position:relative;z-index:1;}
+
+  .xp-track-wrap{margin-top:16px;position:relative;z-index:1;}
+  .xp-nums{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;}
+  .xp-nums b{color:var(--primary-dark);}
+  .xp-track{height:12px;border-radius:8px;background:var(--primary-light);overflow:hidden;position:relative;}
+  .xp-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--primary),var(--success));transition:width .6s cubic-bezier(.2,.7,.3,1);}
+  .xp-tonext{font-size:11px;color:var(--muted);font-weight:600;margin-top:7px;}
+
+  /* ---------- Action card ---------- */
+  .card{background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow);border:1px solid var(--border);padding:20px;margin-bottom:16px;}
+  .card-title{font-size:15px;font-weight:700;font-family:'Baloo 2',sans-serif;margin-bottom:4px;}
+  .card-sub{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:14px;line-height:1.6;}
+  .earn-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);}
+  .earn-row:last-of-type{border-bottom:none;}
+  .earn-icon{width:36px;height:36px;border-radius:11px;background:var(--success-bg);color:var(--success-dark);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+  .earn-icon.pending{background:var(--warning-bg);color:var(--warning-dark);}
+  .earn-text{flex:1;}
+  .earn-title{font-weight:700;font-size:13px;}
+  .earn-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+  .earn-xp{font-size:12px;font-weight:800;color:var(--success-dark);}
+  .earn-xp.pending{color:var(--warning-dark);}
+
+  .challenge-btn{width:100%;border:none;border-radius:14px;padding:13px;font-weight:700;font-size:13.5px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;background:var(--primary);color:#fff;margin-top:6px;}
+  .challenge-btn:hover{background:var(--primary-dark);}
+  .challenge-btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;}
+  .challenge-hint{text-align:center;font-size:11px;color:var(--muted);font-weight:600;margin-top:8px;}
+  .wallet-top{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--primary-light);border-radius:16px;padding:14px;margin:12px 0;}
+  .wallet-balance{display:flex;align-items:center;gap:9px;}
+  .wallet-pearl{font-size:27px;line-height:1;}
+  .wallet-number{font-family:'Baloo 2',sans-serif;font-size:27px;font-weight:800;color:var(--primary-dark);line-height:1.05;}
+  .wallet-caption{font-size:10.5px;color:var(--muted);font-weight:700;margin-top:2px;}
+  .wallet-status{font-size:11px;font-weight:800;color:var(--primary-dark);text-align:right;line-height:1.5;}
+  .wallet-btn{width:100%;border:none;border-radius:14px;padding:13px;font-weight:700;font-size:13.5px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;background:var(--primary);color:#fff;margin-top:4px;}
+  .wallet-btn:hover{background:var(--primary-dark);}
+  .wallet-btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;}
+
+  /* ---------- Level list ---------- */
+  .tier-row{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--border);}
+  .tier-row:last-child{border-bottom:none;}
+  .tier-row.locked{opacity:.5;}
+  .tier-emoji{font-size:22px;width:38px;text-align:center;flex-shrink:0;transition:font-size .3s ease;}
+  .tier-info{flex:1;}
+  .tier-name{font-weight:700;font-size:13px;}
+  .tier-xp{font-size:11px;color:var(--muted);font-weight:600;}
+  .tier-status{font-size:16px;flex-shrink:0;}
+  .tier-row.current{background:var(--primary-light);border-radius:14px;padding-left:8px;}
+
+  .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:var(--text);color:#fff;padding:11px 20px;border-radius:999px;font-size:13px;font-weight:600;opacity:0;transition:all .25s ease;pointer-events:none;z-index:50;box-shadow:0 8px 20px rgba(0,0,0,.2);text-align:center;max-width:80vw;}
+  .toast.show{opacity:1;transform:translate(-50%,0);}
+
+  .credit{text-align:center;font-size:10.5px;color:var(--muted);padding:8px 10px 0;font-weight:500;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="topbar">
+      <a class="back-btn" href="javascript:history.back()">←</a>
+      <div class="hero-title" data-i18n="pageTitle">Whale Level</div>
+      <div class="lang-switch">
+        <button class="lang-btn" onclick="toggleLangMenu()">🌐 <span id="langCode">EN</span></button>
+        <div class="lang-menu" id="langMenu">
+          <div class="lang-option" id="langOptEn" onclick="setLang('en')">🇬🇧 English</div>
+          <div class="lang-option" id="langOptId" onclick="setLang('id')">🇮🇩 Bahasa Indonesia</div>
+          <div class="lang-option disabled">🇪🇸 Español <span class="lang-soon">Soon</span></div>
+          <div class="lang-option disabled">🇫🇷 Français <span class="lang-soon">Soon</span></div>
+          <div class="lang-option disabled">🇨🇳 中文 <span class="lang-soon">Soon</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="hero-sub" data-i18n="pageSub">Build healthy digital habits and watch your whale friend grow bigger with every level!</p>
+  </div>
+</div>
+
+<div class="wrap overlap">
+
+  <div class="stage-card fu" style="animation-delay:.05s">
+    <div class="stage-bg"></div>
+    <div class="level-pill">🏅 <span data-i18n="levelLabel">Level</span> <span id="levelNum">1</span></div>
+
+    <div class="whale-float">
+      <div class="whale-scale" id="whaleScale">
+        <svg class="whale-svg" viewBox="0 0 240 160" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bodyGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#4E86FF"/>
+              <stop offset="100%" stop-color="#17399E"/>
+            </linearGradient>
+          </defs>
+
+          <!-- sparkle orbit (level 5+) -->
+          <g class="accessory" id="accSparkle">
+            <g class="sparkle-orbit">
+              <text x="120" y="20" font-size="16">✨</text>
+              <text x="205" y="90" font-size="14">⭐</text>
+              <text x="35" y="130" font-size="14">✨</text>
+            </g>
+          </g>
+
+          <!-- tail -->
+          <path d="M193 68 Q224 36 233 52 Q219 61 222 74 Q233 84 233 99 Q221 92 208 101 Q220 116 203 120 Q198 100 188 96 Z" fill="url(#bodyGrad)"/>
+          <!-- body -->
+          <ellipse cx="118" cy="95" rx="80" ry="47" fill="url(#bodyGrad)"/>
+          <!-- belly -->
+          <ellipse cx="126" cy="114" rx="48" ry="23" fill="#EAF3FF" opacity="0.9"/>
+          <!-- fin -->
+          <path d="M98 56 Q112 26 130 54 Q114 62 98 56 Z" fill="#2E6BF2"/>
+          <!-- cheek blush -->
+          <ellipse cx="57" cy="99" rx="7" ry="4" fill="#F0A93E" opacity=".4"/>
+          <!-- eye -->
+          <circle cx="71" cy="87" r="6.5" fill="#17399E"/>
+          <circle cx="69" cy="85" r="2.1" fill="#fff"/>
+          <!-- mouth -->
+          <path d="M48 100 Q65 111 84 102" stroke="#17399E" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+          <!-- spout bubbles -->
+          <g id="accSpout">
+            <circle class="bubble" cx="84" cy="34" r="5" fill="#BFD8FF"/>
+            <circle class="bubble" cx="96" cy="24" r="3.5" fill="#BFD8FF"/>
+            <circle class="bubble" cx="74" cy="20" r="4" fill="#BFD8FF"/>
+          </g>
+
+          <!-- crown (level 6, max) -->
+          <g class="accessory" id="accCrown">
+            <path d="M52 40 L58 22 L68 34 L79 18 L90 34 L100 22 L106 40 Z" fill="#F0A93E" stroke="#B0700E" stroke-width="1.5" stroke-linejoin="round"/>
+            <circle cx="79" cy="18" r="3" fill="#FFE9BE"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <div class="level-name" id="levelName">Baby Whale</div>
+    <div class="level-desc" id="levelDesc">Just hatched — full of curiosity!</div>
+
+    <div class="xp-track-wrap">
+      <div class="xp-nums"><span data-i18n="xpLabel">XP</span> <b><span id="xpNow">0</span> / <span id="xpNext">60</span></b></div>
+      <div class="xp-track"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+      <div class="xp-tonext" id="xpToNext"></div>
+    </div>
+  </div>
+
+  <div class="card fu" style="animation-delay:.1s">
+    <div class="card-title" data-i18n="earnTitle">How to earn XP</div>
+    <div class="card-sub" data-i18n="earnSub">Every healthy digital habit you complete today feeds your whale.</div>
+
+    <div class="earn-row">
+      <div class="earn-icon" id="earnMoodIcon">😊</div>
+      <div class="earn-text">
+        <div class="earn-title" data-i18n="earnMoodTitle">Daily mood check-in</div>
+        <div class="earn-sub" id="earnMoodSub" data-i18n="earnPending">Not done yet today</div>
+      </div>
+      <div class="earn-xp" id="earnMoodXp">+10 XP</div>
+    </div>
+    <div class="earn-row">
+      <div class="earn-icon" id="earnLimitIcon">⏱️</div>
+      <div class="earn-text">
+        <div class="earn-title" data-i18n="earnLimitTitle">Stayed under screen limit</div>
+        <div class="earn-sub" id="earnLimitSub" data-i18n="earnPending">Not done yet today</div>
+      </div>
+      <div class="earn-xp" id="earnLimitXp">+15 XP</div>
+    </div>
+
+    <div class="earn-row">
+      <div class="earn-icon" id="earnQuizIcon">🧠</div>
+      <div class="earn-text">
+        <div class="earn-title" data-i18n="earnQuizTitle">Learning quiz</div>
+        <div class="earn-sub" id="earnQuizSub" data-i18n="earnQuizSub">Complete a quiz to collect Pearl and XP.</div>
+      </div>
+      <div class="earn-xp" id="earnQuizXp">Pearl + XP</div>
+    </div>
+    <a class="challenge-btn" href="quiz.html" style="display:block;text-align:center;text-decoration:none" data-i18n="openQuiz">🧠 Open Learning Quiz</a>
+  </div>
+
+  <div class="card fu" style="animation-delay:.13s">
+    <div class="card-title" data-i18n="walletTitle">Pearl Wallet</div>
+    <div class="wallet-top">
+      <div class="wallet-balance">
+        <span class="wallet-pearl">🫧</span>
+        <div>
+          <div class="wallet-number" id="pearlBalance">0</div>
+          <div class="wallet-caption" data-i18n="walletCaption">Your saved Pearl</div>
+        </div>
+      </div>
+      <div class="wallet-status" id="walletStatus">Bonus time today: 0/20 min</div>
+    </div>
+    <div class="card-sub" data-i18n="walletSub">Save Pearl from correct answers. Exchange 8 Pearl for 5 extra minutes for learning or another parent-approved positive activity.</div>
+    <button class="wallet-btn" id="redeemBtn" onclick="redeemPearls()" data-i18n="redeemBtn">Exchange 8 Pearl for +5 min</button>
+    <div class="challenge-hint" id="redeemHint"></div>
+  </div>
+
+  <div class="card fu" style="animation-delay:.15s">
+    <div class="card-title" data-i18n="tiersTitle">Whale Levels</div>
+    <div class="card-sub" data-i18n="tiersSub">Keep earning XP — your whale grows a little bigger at every tier.</div>
+    <div id="tierList"></div>
+  </div>
+
+  <div class="credit">
+    🛡️ NURVA Team — SMA Sains Wahid Hasyim Yogyakarta<br>
+    <span data-i18n="footerNote">Educational prototype referencing Indonesian Government Regulation No. 17 of 2025 on Child Protection in the Digital Space.</span>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const I18N = {
+  en:{
+    pageTitle:"Whale Level",
+    pageSub:"Build healthy digital habits and watch your whale friend grow bigger with every level!",
+    levelLabel:"Level",
+    xpLabel:"XP",
+    earnTitle:"How to earn XP",
+    earnSub:"Every healthy digital habit you complete today feeds your whale.",
+    earnMoodTitle:"Daily mood check-in",
+    earnLimitTitle:"Stayed under screen limit",
+    earnQuizTitle:"Learning quiz",
+    earnQuizSub:"Complete a quiz to collect Pearl and XP.",
+    quizDoneToday:(n,x)=>`${n} quiz round(s) today · +${x} XP`,
+    walletTitle:"Pearl Wallet",
+    walletSub:"Save Pearl from correct answers. Exchange 8 Pearl for 5 extra minutes for learning or another parent-approved positive activity.",
+    walletCaption:"Your saved Pearl",
+    walletStatus:(b,c)=>`Bonus time today: ${b}/${c} min`,
+    redeemBtn:"Exchange 8 Pearl for +5 min",
+    redeemNeed:(n)=>`Collect ${n} more Pearl to exchange.`,
+    redeemCap:"You have reached the daily bonus limit set by your parent.",
+    redeemOff:"Bonus time is not enabled by your parent.",
+    redeemReady:"Your Pearl is ready to exchange!",
+    toastRedeem:"8 Pearl exchanged for 5 extra minutes!",
+    openQuiz:"🧠 Open Learning Quiz",
+    earnDone:"Done today ✓",
+    earnPending:"Not done yet today",
+    earnNoLimit:"Ask your parent to set a daily limit first",
+    challengeBtn:"🎯 Complete a daily challenge (+20 XP)",
+    challengeLeft:(n)=>`${n} challenge(s) left today`,
+    challengeNone:"No more challenges today — come back tomorrow!",
+    toNext:(n)=>`${n} XP to next level`,
+    maxLevel:"Maximum level reached! Your whale is legendary 🐋👑",
+    toastMood:"+10 XP — mood check-in complete!",
+    toastLimit:"+15 XP — great job staying under your limit!",
+    toastChallenge:"+20 XP — challenge complete!",
+    toastLevelUp:(name)=>`🎉 Level up! Your whale is now a ${name}`,
+    footerNote:"Educational prototype referencing Indonesian Government Regulation No. 17 of 2025 on Child Protection in the Digital Space.",
+    names:["Baby Whale","Little Whale","Young Whale","Grown Whale","Big Whale","Giant Whale"],
+    descs:[
+      "Just hatched — full of curiosity!",
+      "Starting to explore the ocean.",
+      "Growing stronger every day.",
+      "A confident, healthy swimmer.",
+      "Big, calm, and full of energy.",
+      "Legendary size — the ocean's pride!"
+    ]
+  },
+  id:{
+    pageTitle:"Level Paus",
+    pageSub:"Bangun kebiasaan digital yang sehat dan lihat paus kesayanganmu makin besar di setiap level!",
+    levelLabel:"Level",
+    xpLabel:"XP",
+    earnTitle:"Cara Mendapatkan XP",
+    earnSub:"Setiap kebiasaan digital sehat yang kamu selesaikan hari ini memberi makan pausmu.",
+    earnMoodTitle:"Cek perasaan harian",
+    earnLimitTitle:"Screen time di bawah batas",
+    earnQuizTitle:"Kuis Belajar",
+    earnQuizSub:"Selesaikan kuis untuk mengumpulkan Pearl dan XP.",
+    quizDoneToday:(n,x)=>`${n} ronde kuis hari ini · +${x} XP`,
+    walletTitle:"Dompet Pearl",
+    walletSub:"Simpan Pearl dari jawaban benar. Tukarkan 8 Pearl dengan 5 menit tambahan untuk belajar atau kegiatan positif yang disetujui orang tua.",
+    walletCaption:"Pearl yang kamu simpan",
+    walletStatus:(b,c)=>`Bonus waktu hari ini: ${b}/${c} menit`,
+    redeemBtn:"Tukar 8 Pearl menjadi +5 menit",
+    redeemNeed:(n)=>`Kumpulkan ${n} Pearl lagi untuk menukar.`,
+    redeemCap:"Batas bonus harian dari orang tuamu sudah tercapai.",
+    redeemOff:"Bonus waktu belum diaktifkan oleh orang tuamu.",
+    redeemReady:"Pearl-mu sudah cukup untuk ditukar!",
+    toastRedeem:"8 Pearl berhasil ditukar menjadi 5 menit tambahan!",
+    openQuiz:"🧠 Buka Kuis Belajar",
+    earnDone:"Sudah dilakukan hari ini ✓",
+    earnPending:"Belum dilakukan hari ini",
+    earnNoLimit:"Minta orang tuamu atur batas harian dulu",
+    challengeBtn:"🎯 Selesaikan tantangan harian (+20 XP)",
+    challengeLeft:(n)=>`Tersisa ${n} tantangan hari ini`,
+    challengeNone:"Tantangan hari ini sudah habis — coba lagi besok!",
+    toNext:(n)=>`${n} XP lagi menuju level berikutnya`,
+    maxLevel:"Level maksimum tercapai! Pausmu jadi legenda 🐋👑",
+    toastMood:"+10 XP — cek perasaan selesai!",
+    toastLimit:"+15 XP — mantap, screen time di bawah batas!",
+    toastChallenge:"+20 XP — tantangan selesai!",
+    toastLevelUp:(name)=>`🎉 Naik level! Pausmu sekarang jadi ${name}`,
+    footerNote:"Prototype edukasi mengacu PP Nomor 17 Tahun 2025 tentang Perlindungan Anak di Ranah Digital.",
+    names:["Bayi Paus","Paus Kecil","Paus Muda","Paus Dewasa","Paus Besar","Paus Raksasa"],
+    descs:[
+      "Baru menetas — penuh rasa penasaran!",
+      "Mulai menjelajahi lautan.",
+      "Makin kuat setiap harinya.",
+      "Perenang yang sehat dan percaya diri.",
+      "Besar, tenang, dan penuh energi.",
+      "Ukuran legenda — kebanggaan lautan!"
+    ]
+  }
+};
+let currentLang = localStorage.getItem('nurva_lang') || 'en';
+function t(key,...a){ const d=I18N[currentLang]||I18N.en; const v=d[key]; return typeof v==='function' ? v(...a) : v; }
+function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2200); }
+function toggleLangMenu(){ document.getElementById('langMenu').classList.toggle('open'); }
+document.addEventListener('click',e=>{ const w=document.querySelector('.lang-switch'); if(w && !w.contains(e.target)) document.getElementById('langMenu').classList.remove('open'); });
+function setLang(lang){ currentLang=lang; localStorage.setItem('nurva_lang',lang); render(); document.getElementById('langMenu').classList.remove('open'); }
+
+/* ---------- level system ---------- */
+const THRESHOLDS=[0,60,150,280,450,650]; // cumulative XP needed to REACH level i+1
+const SCALES=[0.62,0.74,0.86,1.0,1.16,1.34];
+const MAX_LEVEL_INDEX=5;
+
+function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+function getXP(){ return parseInt(localStorage.getItem('nurva_whale_xp')||'0',10); }
+function setXP(v){ localStorage.setItem('nurva_whale_xp', String(Math.max(0,v))); }
+
+function levelIndexForXP(xp){
+  let idx=0;
+  for(let i=0;i<THRESHOLDS.length;i++){ if(xp>=THRESHOLDS[i]) idx=i; }
+  return idx;
+}
+
+function addXP(amount){
+  const before=levelIndexForXP(getXP());
+  setXP(getXP()+amount);
+  const after=levelIndexForXP(getXP());
+  render(true);
+  if(after>before){
+    const dict=I18N[currentLang]||I18N.en;
+    setTimeout(()=>toast(dict.toastLevelUp(dict.names[after])),450);
+    const scaleEl=document.getElementById('whaleScale');
+    scaleEl.classList.remove('pop'); void scaleEl.offsetWidth; scaleEl.classList.add('pop');
+  }
+}
+
+/* ---------- passive XP: mood check-in + under screen limit ---------- */
+function isTodayTimestamp(ts){
+  if(!ts) return false;
+  const d=new Date(ts); const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); return key===todayStr();
+}
+function checkPassiveXP(){
+  const dict=I18N[currentLang]||I18N.en;
+  // mood
+  const moodRaw=localStorage.getItem('nurva_child_mood');
+  let moodToday=false;
+  if(moodRaw){ try{ const mood=JSON.parse(moodRaw); moodToday=isTodayTimestamp(mood && mood.time); }catch(e){} }
+  if(moodToday && localStorage.getItem('nurva_whale_award_mood')!==todayStr()){
+    localStorage.setItem('nurva_whale_award_mood', todayStr());
+    addXP(10);
+    toast(dict.toastMood);
+  }
+  // screen limit
+  const mins=parseInt(localStorage.getItem('nurva_screen_time_minutes')||'0',10);
+  const baseLimit=parseInt(localStorage.getItem('nurva_screen_limit_minutes') || localStorage.getItem('nurva_limit_minutes') || '0',10);
+  const bonusToday=getTodayBonusState().mins;
+  const limit=Number.isFinite(baseLimit) ? baseLimit + bonusToday : 0;
+  const underLimit = limit>0 && mins<=limit;
+  if(underLimit && localStorage.getItem('nurva_whale_award_limit')!==todayStr()){
+    localStorage.setItem('nurva_whale_award_limit', todayStr());
+    addXP(15);
+    toast(dict.toastLimit);
+  }
+}
+
+/* ---------- Pearl wallet and bonus-time exchange ---------- */
+const PEARL_REDEEM_COST = 8;
+const BONUS_REDEEM_MINUTES = 5;
+
+function getPearls(){
+  const value = parseInt(localStorage.getItem('nurva_whale_pearls') || '0', 10);
+  return Number.isFinite(value) ? Math.max(0, value) : 0;
+}
+function setPearls(value){
+  localStorage.setItem('nurva_whale_pearls', String(Math.max(0, Math.floor(value))));
+}
+function getBonusCap(){
+  const raw = localStorage.getItem('nurva_bonus_cap');
+  if(raw === null) return 20;
+  const value = parseInt(raw, 10);
+  return Number.isFinite(value) ? Math.max(0, value) : 20;
+}
+function getTodayBonusState(){
+  try{
+    const value = JSON.parse(localStorage.getItem('nurva_bonus_today') || 'null');
+    if(value && value.date === new Date().toDateString()) return {date:value.date, mins:Math.max(0,parseInt(value.mins || '0',10) || 0)};
+  }catch(e){}
+  return {date:new Date().toDateString(), mins:0};
+}
+function redeemPearls(){
+  const pearls = getPearls();
+  const bonus = getTodayBonusState();
+  const cap = getBonusCap();
+  if(cap <= 0 || bonus.mins + BONUS_REDEEM_MINUTES > cap || pearls < PEARL_REDEEM_COST) return;
+
+  setPearls(pearls - PEARL_REDEEM_COST);
+  localStorage.setItem('nurva_bonus_today', JSON.stringify({
+    date:new Date().toDateString(),
+    mins:bonus.mins + BONUS_REDEEM_MINUTES
+  }));
+  render();
+  toast(t('toastRedeem'));
+}
+function renderWallet(){
+  const pearls = getPearls();
+  const bonus = getTodayBonusState();
+  const cap = getBonusCap();
+  const remaining = Math.max(0, cap - bonus.mins);
+  const canRedeem = cap > 0 && remaining >= BONUS_REDEEM_MINUTES && pearls >= PEARL_REDEEM_COST;
+
+  document.getElementById('pearlBalance').textContent = pearls;
+  document.getElementById('walletStatus').textContent = t('walletStatus', bonus.mins, cap);
+  const button = document.getElementById('redeemBtn');
+  button.disabled = !canRedeem;
+  const hint = document.getElementById('redeemHint');
+  if(cap <= 0) hint.textContent = t('redeemOff');
+  else if(remaining < BONUS_REDEEM_MINUTES) hint.textContent = t('redeemCap');
+  else if(pearls < PEARL_REDEEM_COST) hint.textContent = t('redeemNeed', PEARL_REDEEM_COST - pearls);
+  else hint.textContent = t('redeemReady');
+}
+function renderQuizEarned(){
+  let log = [];
+  try{ log = JSON.parse(localStorage.getItem('nurva_quiz_log') || '[]'); }catch(e){}
+  const today = new Date().toDateString();
+  const todays = Array.isArray(log) ? log.filter(item => item && item.time && new Date(item.time).toDateString() === today) : [];
+  const xp = todays.reduce((sum,item)=>sum + (parseInt(item.xpEarned || '0',10) || 0),0);
+  const sub = document.getElementById('earnQuizSub');
+  sub.textContent = todays.length ? t('quizDoneToday', todays.length, xp) : t('earnQuizSub');
+  document.getElementById('earnQuizXp').textContent = todays.length ? '+' + xp + ' XP' : 'Pearl + XP';
+}
+
+/* ---------- render ---------- */
+function renderTierList(){
+  const dict=I18N[currentLang]||I18N.en;
+  const xp=getXP();
+  const curIdx=levelIndexForXP(xp);
+  const wrap=document.getElementById('tierList');
+  wrap.innerHTML='';
+  const baseSize=15;
+  THRESHOLDS.forEach((thr,i)=>{
+    const row=document.createElement('div');
+    row.className='tier-row'+(i>curIdx?' locked':'')+(i===curIdx?' current':'');
+    const size=Math.round(baseSize+ i*4);
+    const status = i<curIdx ? '✅' : (i===curIdx ? '👉' : '🔒');
+    row.innerHTML=`
+      <div class="tier-emoji" style="font-size:${size}px">🐋</div>
+      <div class="tier-info">
+        <div class="tier-name">${dict.names[i]}</div>
+        <div class="tier-xp">${thr} XP${i===MAX_LEVEL_INDEX?' (MAX)':''}</div>
+      </div>
+      <div class="tier-status">${status}</div>
+    `;
+    wrap.appendChild(row);
+  });
+}
+
+function render(skipTierAnim){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ const v=t(el.getAttribute('data-i18n')); if(v!==undefined) el.textContent=v; });
+  document.getElementById('langCode').textContent=currentLang.toUpperCase();
+  document.getElementById('langOptEn').classList.toggle('active',currentLang==='en');
+  document.getElementById('langOptId').classList.toggle('active',currentLang==='id');
+  document.documentElement.lang=currentLang;
+
+  const dict=I18N[currentLang]||I18N.en;
+  const xp=getXP();
+  const idx=levelIndexForXP(xp);
+  const scale=SCALES[idx];
+
+  document.getElementById('levelNum').textContent = idx+1;
+  document.getElementById('levelName').textContent = dict.names[idx];
+  document.getElementById('levelDesc').textContent = dict.descs[idx];
+
+  const scaleEl=document.getElementById('whaleScale');
+  scaleEl.style.setProperty('--lvl-scale', scale);
+  scaleEl.style.transform = `scale(${scale})`;
+
+  document.getElementById('accSparkle').classList.toggle('show', idx>=4);
+  document.getElementById('accCrown').classList.toggle('show', idx>=5);
+
+  const curFloor=THRESHOLDS[idx];
+  const nextCeil= idx<MAX_LEVEL_INDEX ? THRESHOLDS[idx+1] : THRESHOLDS[MAX_LEVEL_INDEX];
+  document.getElementById('xpNow').textContent=xp;
+  document.getElementById('xpNext').textContent= idx<MAX_LEVEL_INDEX ? nextCeil : xp;
+  const pct = idx<MAX_LEVEL_INDEX ? Math.min(100, Math.round(((xp-curFloor)/(nextCeil-curFloor))*100)) : 100;
+  document.getElementById('xpFill').style.width=pct+'%';
+  document.getElementById('xpToNext').textContent = idx<MAX_LEVEL_INDEX ? dict.toNext(nextCeil-xp) : dict.maxLevel;
+
+  // earn-today status
+  const moodDoneToday = localStorage.getItem('nurva_whale_award_mood')===todayStr();
+  const limitDoneToday = localStorage.getItem('nurva_whale_award_limit')===todayStr();
+  const limitSet = parseInt(localStorage.getItem('nurva_screen_limit_minutes') || localStorage.getItem('nurva_limit_minutes') || '0',10)>0;
+
+  document.getElementById('earnMoodIcon').classList.toggle('pending', !moodDoneToday);
+  document.getElementById('earnMoodXp').classList.toggle('pending', !moodDoneToday);
+  document.getElementById('earnMoodSub').textContent = moodDoneToday ? dict.earnDone : dict.earnPending;
+
+  document.getElementById('earnLimitIcon').classList.toggle('pending', !limitDoneToday);
+  document.getElementById('earnLimitXp').classList.toggle('pending', !limitDoneToday);
+  document.getElementById('earnLimitSub').textContent = limitDoneToday ? dict.earnDone : (limitSet ? dict.earnPending : dict.earnNoLimit);
+
+  renderTierList();
+  renderWallet();
+  renderQuizEarned();
+}
+
+window.addEventListener('storage', function(){ render(); });
+
+checkPassiveXP();
+render();
+</script>
+</body>
+</html>

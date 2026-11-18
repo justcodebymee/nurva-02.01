@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NURVA - Learning Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nurva-shared.css">
+<style>
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips .tab{flex:0 0 auto;min-width:54px}
+.subj-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.subj{border:1.5px solid var(--border);border-radius:18px;background:#FAFCFF;padding:18px 10px;text-align:center;font-family:'Baloo 2',sans-serif;font-size:16px;font-weight:700;cursor:pointer;color:var(--text)}
+.subj:hover{border-color:var(--primary);background:var(--primary-light)}
+.subj:disabled{opacity:.45;cursor:not-allowed}
+.subj span{display:block;font-size:28px;margin-bottom:4px}
+.q-text{font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;line-height:1.4;margin:6px 0 16px}
+.opt{display:block;width:100%;text-align:left;border:1.5px solid var(--border);border-radius:13px;padding:13px 14px;margin-bottom:10px;background:#FAFCFF;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:14px;color:var(--text);cursor:pointer}
+.opt.right{border-color:var(--success);background:var(--success-bg)}
+.opt.wrong{border-color:var(--danger);background:var(--danger-bg)}
+.res-emoji{font-size:54px;text-align:center}
+</style>
+</head>
+<body>
+<div id="hero"></div>
+<div class="wrap overlap" id="main"></div>
+<div id="bottomNav"></div>
+<div class="toast" id="toast"></div>
+<script src="nurva-shared.js"></script>
+<script src="quiz-data.js"></script>
+<script>
+var ROUND_Q = 4, PEARL_PER_CORRECT = 2, XP_PER_CORRECT = 2, XP_PER_COMPLETED_QUIZ = 5, PEARL_REDEEM_COST = 8, BONUS_REDEEM_MINUTES = 5;
+var DICT = {
+  en:{
+    pageTitle:"Learning Quiz", pageSub:"Answer learning questions, collect Pearl, and help your whale grow.",
+    forAge:function(a){return "Questions matched to age "+a;}, editProfile:"Edit", needAge:"Set your age in your profile first so we can pick questions that fit you.", toProfile:"Open profile",
+    subjTitle:"Choose a subject",
+    subj:{math:"Math", indo:"Indonesian", eng:"English", ipa:"Science"},
+    bonusInfo:function(b,c){return "Bonus time exchanged today: "+b+" of "+c+" min";},
+    capReached:"You have reached today's bonus-time limit. You can still learn and save Pearl for another day.",
+    capOff:"Your parent has not enabled bonus time. You can still complete the quiz and grow your whale.",
+    rule:function(n,p,x,c,r,m){return n+" questions per round. Each correct answer gives "+p+" Pearl and "+x+" XP. Completing a round gives +"+c+" XP. Exchange "+r+" Pearl for "+m+" extra learning minutes in Whale Level.";},
+    pearlEarned:function(n){return "+"+n+" Pearl earned";}, xpEarned:function(n){return "+"+n+" XP added to Whale Level";}, pearlBalance:function(n){return "Pearl saved: "+n;},
+    openWhale:"Open Whale Level to exchange Pearl", quizTimeNote:"This learning quiz does not use your screen-time allowance.",
+    waitingLimit:function(u,l){return "The quiz unlocks after your recorded screen time reaches the daily limit. Current usage: "+u+" / "+l+" min.";},
+    demoAccess:"Prototype test mode: no screen-time usage has been recorded yet, so the quiz is available for testing.",
+    age:function(a){return a+" yrs";},
+    qOf:function(i,n){return "Question "+i+" of "+n;},
+    next:"Next", finish:"See result",
+    correctN:function(c,t){return c+" of "+t+" correct";},
+    bonusGot:function(b){return b>0?"+"+b+" min added to today's limit":"No bonus added";},
+    capNote:"Today's bonus limit is reached.",
+    timeNote:function(u){return u+" min of play counted as screen time.";},
+    again:"Play again", homeBtn:"Back to home",
+    good:"Great job!", ok:"Nice try, keep going!", answerWas:function(a){return "Correct answer: "+a;}
+  },
+  id:{
+    pageTitle:"Kuis Belajar", pageSub:"Jawab soal, kumpulkan Pearl, dan bantu pausmu tumbuh.",
+    forAge:function(a){return "Soal disesuaikan untuk usia "+a+" tahun";}, editProfile:"Ubah", needAge:"Isi usiamu di profil dulu supaya soalnya sesuai untukmu.", toProfile:"Buka profil",
+    subjTitle:"Pilih mata pelajaran",
+    subj:{math:"Matematika", indo:"B. Indonesia", eng:"B. Inggris", ipa:"IPA"},
+    bonusInfo:function(b,c){return "Bonus waktu yang ditukar hari ini: "+b+" dari "+c+" menit";},
+    capReached:"Batas bonus waktu hari ini sudah tercapai. Kamu tetap boleh belajar dan menyimpan Pearl untuk hari berikutnya.",
+    capOff:"Orang tuamu belum mengaktifkan bonus waktu. Kamu tetap bisa mengerjakan kuis dan menumbuhkan pausmu.",
+    rule:function(n,p,x,c,r,m){return n+" soal per ronde. Setiap jawaban benar memberi "+p+" Pearl dan "+x+" XP. Menyelesaikan satu ronde memberi +"+c+" XP. Tukarkan "+r+" Pearl dengan "+m+" menit belajar tambahan di Level Paus.";},
+    pearlEarned:function(n){return "+"+n+" Pearl terkumpul";}, xpEarned:function(n){return "+"+n+" XP masuk ke Level Paus";}, pearlBalance:function(n){return "Pearl tersimpan: "+n;},
+    openWhale:"Buka Level Paus untuk menukar Pearl", quizTimeNote:"Kuis belajar ini tidak mengurangi jatah screen time kamu.",
+    waitingLimit:function(u,l){return "Kuis terbuka setelah penggunaan screen time yang tercatat mencapai batas harian. Pemakaian sekarang: "+u+" / "+l+" menit.";},
+    demoAccess:"Mode uji prototype: belum ada pemakaian screen time yang tercatat, jadi kuis bisa dibuka untuk pengujian.",
+    age:function(a){return a+" th";},
+    qOf:function(i,n){return "Soal "+i+" dari "+n;},
+    next:"Lanjut", finish:"Lihat hasil",
+    correctN:function(c,t){return c+" dari "+t+" benar";},
+    bonusGot:function(b){return b>0?"+"+b+" menit ditambah ke batas hari ini":"Tidak ada bonus";},
+    capNote:"Batas bonus hari ini sudah tercapai.",
+    timeNote:function(u){return u+" menit bermain dihitung sebagai screen time.";},
+    again:"Main lagi", homeBtn:"Kembali ke beranda",
+    good:"Hebat!", ok:"Ayo coba lagi, kamu pasti bisa!", answerWas:function(a){return "Jawaban benar: "+a;}
+  }
+};
+var S = {view:'setup', subject:null, qs:[], i:0, ok:0, picked:null, t0:0, res:null};
+function userAge(){ return parseInt(NURVA.get('nurva_child_age','0'),10) || 0; }
+function band(a){ return a<=12 ? 'a' : a<=14 ? 'b' : 'c'; }
+function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)), x=a[i]; a[i]=a[j]; a[j]=x; } return a; }
+function startQuiz(sub){
+  var pool = QUIZ_Q[sub][band(userAge())];
+  S.subject = sub; S.i = 0; S.ok = 0; S.picked = null; S.t0 = Date.now(); S.view = 'play';
+  S.qs = shuffle(pool).slice(0,ROUND_Q).map(function(r){ return {q:r[0], c:r[1], o:shuffle(r.slice(1,5)), e:r[5]}; });
+  render();
+}
+function answer(k){
+  if(S.picked !== null) return;
+  S.picked = k;
+  if(S.qs[S.i].o[k] === S.qs[S.i].c) S.ok++;
+  render();
+}
+function next(){
+  S.i++; S.picked = null;
+  if(S.i >= S.qs.length) finish();
+  render();
+}
+function getPearlBalance(){
+  var value = parseInt(localStorage.getItem('nurva_whale_pearls') || '0', 10);
+  return Number.isFinite(value) ? Math.max(0, value) : 0;
+}
+function getStoredBonusToday(){
+  try{
+    var value = JSON.parse(localStorage.getItem('nurva_bonus_today') || 'null');
+    if(value && value.date === new Date().toDateString()) return parseInt(value.mins || '0', 10) || 0;
+  }catch(e){}
+  return 0;
+}
+function getBonusCap(){
+  var raw = localStorage.getItem('nurva_bonus_cap');
+  if(raw === null) return 20;
+  var value = parseInt(raw, 10);
+  return Number.isFinite(value) ? Math.max(0, value) : 20;
+}
+function getScreenTimeState(){
+  var usageRaw = localStorage.getItem('nurva_screen_time_minutes');
+  var usage = parseInt(usageRaw || '0', 10);
+  if(!Number.isFinite(usage) || usage < 0) usage = 0;
+  var baseRaw = localStorage.getItem('nurva_screen_limit_minutes');
+  if(baseRaw === null) baseRaw = localStorage.getItem('nurva_limit_minutes');
+  var base = parseInt(baseRaw || '120', 10);
+  if(!Number.isFinite(base) || base <= 0) base = 120;
+  var limit = base + getStoredBonusToday();
+  return {usage:usage, limit:limit, recorded:usageRaw !== null, reached:usage >= limit};
+}
+function finish(){
+  var pearlEarned = S.ok * PEARL_PER_CORRECT;
+  var xpEarned = XP_PER_COMPLETED_QUIZ + S.ok * XP_PER_CORRECT;
+  var newPearlBalance = getPearlBalance() + pearlEarned;
+  var newXP = (parseInt(localStorage.getItem('nurva_whale_xp') || '0', 10) || 0) + xpEarned;
+
+  localStorage.setItem('nurva_whale_pearls', String(newPearlBalance));
+  localStorage.setItem('nurva_whale_xp', String(newXP));
+
+  var log = NURVA.getJSON('nurva_quiz_log', []);
+  log.push({
+    time:Date.now(), subject:S.subject, correct:S.ok, total:S.qs.length,
+    bonus:0, used:0, pearlEarned:pearlEarned, xpEarned:xpEarned
+  });
+  localStorage.setItem('nurva_quiz_log', JSON.stringify(log.slice(-100)));
+
+  S.res = {pearls:pearlEarned, xp:xpEarned, pearlBalance:newPearlBalance};
+  S.view = 'result';
+}
+function setupHTML(){
+  var a = userAge(), cap = getBonusCap(), have = getStoredBonusToday();
+  var screen = getScreenTimeState();
+  var names = NURVA.t('subj'), ic = {math:'🧮',indo:'📖',eng:'🔤',ipa:'🔬'};
+  var isDemo = !screen.recorded;
+  var canStart = screen.reached || isDemo;
+  var subs = Object.keys(ic).map(function(k){
+    return '<button class="subj" '+((!a||!canStart)?'disabled ':'')+'onclick="startQuiz(\''+k+'\')"><span>'+ic[k]+'</span>'+names[k]+'</button>';
+  }).join('');
+  var ageCard = a ? '<p class="sub" style="margin:0 2px 14px">'+NURVA.t('forAge',a)+' · <a href="profile.html" style="color:var(--primary)">'+NURVA.t('editProfile')+'</a></p>'
+    : '<div class="card fu"><div class="callout">'+NURVA.t('needAge')+'</div><a href="profile.html" style="text-decoration:none"><button class="btn btn-primary" style="margin-top:12px">'+NURVA.t('toProfile')+'</button></a></div>';
+  var accessNote = canStart
+    ? (isDemo ? '<div class="callout" style="margin-top:12px">'+NURVA.t('demoAccess')+'</div>' : '')
+    : '<div class="callout" style="margin-top:12px">'+NURVA.t('waitingLimit',screen.usage,screen.limit)+'</div>';
+  var capNote = cap <= 0 ? NURVA.t('capOff') : (have >= cap ? NURVA.t('capReached') : NURVA.t('bonusInfo',have,cap));
+  var balance = getPearlBalance();
+  return ageCard +
+    '<div class="card fu" style="animation-delay:.06s"><div class="card-title">'+NURVA.t('subjTitle')+'</div><div class="subj-grid">'+subs+'</div>'+ 
+    '<p class="sub" style="margin:14px 0 0">'+NURVA.t('rule',ROUND_Q,PEARL_PER_CORRECT,XP_PER_CORRECT,XP_PER_COMPLETED_QUIZ,PEARL_REDEEM_COST,BONUS_REDEEM_MINUTES)+'</p>'+accessNote+
+    '<p class="sub" style="margin:10px 0 0"><b>'+capNote+'</b></p>'+
+    '<p class="sub" style="margin:6px 0 0">'+NURVA.t('pearlBalance',balance)+'</p></div>';
+}
+function playHTML(){
+  var q = S.qs[S.i], last = S.i === S.qs.length-1;
+  var opts = q.o.map(function(o,k){
+    var cls = 'opt';
+    if(S.picked !== null){ if(o===q.c) cls += ' right'; else if(k===S.picked) cls += ' wrong'; }
+    return '<button class="'+cls+'" onclick="answer('+k+')">'+o+'</button>';
+  }).join('');
+  var fb = '';
+  if(S.picked !== null) fb = '<div class="callout" style="margin-bottom:12px">'+(q.o[S.picked] !== q.c ? NURVA.t('answerWas',q.c)+'<br>' : '')+'💡 '+q.e+'</div>';
+  var pct = Math.round((S.i + (S.picked!==null?1:0)) / S.qs.length * 100);
+  return '<div class="card fu"><div class="card-title">'+NURVA.t('subj')[S.subject]+' · '+NURVA.t('qOf',S.i+1,S.qs.length)+'</div>'+
+    '<div class="progress" style="margin:0 0 14px"><span style="width:'+pct+'%"></span></div>'+
+    '<div class="q-text">'+q.q+'</div>'+opts+fb+
+    (S.picked!==null ? '<button class="btn btn-primary" onclick="next()">'+NURVA.t(last?'finish':'next')+'</button>' : '')+'</div>';
+}
+function resultHTML(){
+  var good = S.ok >= Math.ceil(S.qs.length*0.75);
+  return '<div class="card fu"><div class="res-emoji">'+(good?'🎉':'💪')+'</div>'+ 
+    '<h3 style="text-align:center;font-size:22px;margin:6px 0">'+NURVA.t(good?'good':'ok')+'</h3>'+ 
+    '<div class="big-number" style="text-align:center;font-size:30px">'+NURVA.t('correctN',S.ok,S.qs.length)+'</div>'+ 
+    '<p style="text-align:center;font-weight:800;font-size:18px;margin:12px 0 4px;color:var(--success-dark)">'+NURVA.t('pearlEarned',S.res.pearls)+'</p>'+ 
+    '<p style="text-align:center;font-weight:700;margin:4px 0;color:var(--primary-dark)">'+NURVA.t('xpEarned',S.res.xp)+'</p>'+ 
+    '<p class="sub" style="text-align:center;margin:4px 0 8px">'+NURVA.t('pearlBalance',S.res.pearlBalance)+'</p>'+ 
+    '<p class="sub" style="text-align:center;margin:4px 0 16px">'+NURVA.t('quizTimeNote')+'</p>'+ 
+    '<a href="level-paus.html" style="text-decoration:none"><button class="btn btn-primary">🐋 '+NURVA.t('openWhale')+'</button></a>'+ 
+    '<button class="btn btn-ghost" onclick="S.view=\'setup\';render()" style="margin-top:10px">'+NURVA.t('again')+'</button>'+ 
+    '<a href="child-dashboard.html" style="text-decoration:none"><button class="btn btn-ghost" style="margin-top:10px">'+NURVA.t('homeBtn')+'</button></a></div>';
+}
+function render(){
+  document.getElementById('main').innerHTML = (S.view==='play' ? playHTML() : S.view==='result' ? resultHTML() : setupHTML()) +
+    '<div class="credit"><span>'+NURVA.t('footerNote')+'</span></div>';
+}
+if(!NURVA.isChild()){ location.replace('parent-dashboard.html'); }
+else { NURVA.start(DICT, render, 'home'); }
+</script>
+</body>
+</html>

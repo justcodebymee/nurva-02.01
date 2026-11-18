@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#070D22">
+<title>NURVA - Login</title>
+<link rel="icon" href="nurva-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070D22; --bg2:#12275F; --field:rgba(7,14,40,.92); --line:#27428C;
+  --primary:#2E6BF2; --sky:#4D9DFF; --cyan:#65DDF2; --lilac:#A99BFF; --pink:#E6A7E8;
+  --text:#EAF1FF; --muted:#9FB1D4; --err:#FF9AAE; --ok:#6EE7B7;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text);
+  background:radial-gradient(circle at 50% 38%,var(--bg2) 0%,var(--bg) 62%);
+  background-attachment:fixed;overflow-x:hidden;
+}
+button,input{font:inherit}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+.page{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px 10px 20px}
+
+/* BRAND (whale logo) */
+.brand{display:flex;align-items:center;gap:12px}
+.brand img{width:64px;height:64px;border-radius:18px;background:#fff;object-fit:contain;box-shadow:0 8px 24px rgba(0,0,0,.35),0 0 22px rgba(77,157,255,.35)}
+.brand-name{font:800 30px/1 'Baloo 2',sans-serif;letter-spacing:1.5px;color:#fff}
+.brand-tag{font-size:10.5px;color:var(--muted);font-weight:600;margin-top:5px}
+
+/* NEON RING + FLIP CARD (fixed 540px design, scaled by JS on small screens) */
+.fit{width:540px;height:540px}
+.fit-inner{transform-origin:0 0}
+.stage{position:relative;width:540px;height:540px;perspective:1400px}
+.disc{position:absolute;inset:5px;border-radius:50%;background:radial-gradient(circle at 50% 30%,#10265C,#081031 72%);box-shadow:inset 0 0 70px rgba(46,107,242,.28)}
+.ring{position:absolute;inset:0;border-radius:50%;
+  filter:drop-shadow(0 0 10px rgba(77,157,255,.9)) drop-shadow(0 0 30px rgba(101,221,242,.35))}
+.ring::before{content:"";position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from 0deg,#4D9DFF 0%,#65DDF2 50%,#4D9DFF 72%,#A99BFF 83%,#E6A7E8 91%,#4D9DFF 100%);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));
+          mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));
+  animation:spin 6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.card{position:absolute;inset:0;transform-style:preserve-3d;transition:transform 1s ease}
+.card.signup{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.back{transform:rotateY(180deg)}
+.form{width:320px}
+
+.form h2{font:800 30px/1 'Baloo 2',sans-serif;color:var(--cyan);text-align:center;margin:0;letter-spacing:.5px;text-shadow:0 0 14px rgba(101,221,242,.45)}
+.form .sub{font-size:12px;color:var(--muted);text-align:center;margin:4px 0 14px}
+
+.field{position:relative;margin-bottom:10px}
+.field input{width:100%;height:44px;border-radius:999px;border:1px solid var(--line);background:var(--field);color:var(--text);
+  padding:0 44px 0 18px;font-size:13.5px;outline:none;transition:border-color .2s,box-shadow .2s}
+.field input::placeholder{color:#7A8DB8}
+.field input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(101,221,242,.2),0 0 14px rgba(77,157,255,.35)}
+.eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:30px;height:30px;border:0;border-radius:50%;background:none;color:var(--muted);cursor:pointer;font-size:15px}
+.eye:hover{color:var(--cyan)}
+
+.roles{display:flex;gap:8px;margin:2px 0 10px}
+.selected-role{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:8px 0 12px;font-size:11.5px;color:var(--muted)}
+.selected-role[hidden]{display:none}
+.role-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid rgba(101,221,242,.4);border-radius:999px;background:rgba(46,107,242,.18);color:#EAF1FF;font-weight:800}
+.pill{flex:1;position:relative}
+.pill input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.pill span{display:flex;align-items:center;justify-content:center;gap:6px;height:34px;border-radius:999px;border:1px solid var(--line);
+  background:var(--field);color:var(--muted);font-size:12px;font-weight:700;transition:.2s}
+.pill input:checked + span{border-color:var(--cyan);color:#fff;background:linear-gradient(100deg,#123A86,#1B4FB8);box-shadow:0 0 12px rgba(77,157,255,.4)}
+.pill input:focus-visible + span{outline:2px solid var(--cyan);outline-offset:2px}
+
+.options{display:flex;align-items:center;justify-content:space-between;margin:0 6px 12px;font-size:11.5px}
+.remember{display:flex;align-items:center;gap:6px;color:var(--muted);font-weight:600;cursor:pointer}
+.remember input{accent-color:var(--sky);margin:0}
+.link{border:0;background:none;padding:0;color:var(--cyan);font-weight:800;cursor:pointer;font-size:inherit}
+.link:hover{text-decoration:underline}
+
+.submit{width:100%;height:48px;border-radius:999px;border:2px solid var(--sky);color:#fff;font-weight:800;font-size:13.5px;letter-spacing:.8px;cursor:pointer;
+  background:linear-gradient(90deg,#0E2A66,#1A47A6);transition:transform .15s,border-color .2s,box-shadow .2s}
+.submit:hover{border-color:var(--cyan);box-shadow:0 0 18px rgba(101,221,242,.45)}
+.submit:active{transform:scale(.97)}
+.submit:disabled{opacity:.7;cursor:wait}
+
+.switch{text-align:center;font-size:12px;color:var(--muted);margin:12px 0 0}
+.notice{min-height:18px;text-align:center;font-size:11px;font-weight:700;margin:6px 0 0;line-height:1.4}
+.notice.error{color:var(--err)} .notice.success{color:var(--ok)}
+
+.footer{font-size:10.5px;color:#7F92BD;line-height:1.7;text-align:center}
+.footer strong{color:#A8BDEB}
+
+/* FORGOT MODAL */
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(3,7,20,.7);z-index:10;align-items:center;justify-content:center;padding:20px}
+.modal-backdrop.show{display:flex}
+.modal{width:min(100%,360px);background:#0C1A3E;border:1px solid var(--line);border-radius:22px;padding:24px;box-shadow:0 0 40px rgba(46,107,242,.3)}
+.modal h3{font:800 21px 'Baloo 2',sans-serif;color:var(--cyan);margin:0 0 6px}
+.modal p{font-size:12.5px;color:var(--muted);line-height:1.6;margin:0 0 16px}
+.modal .ok{display:block;margin-left:auto;border:2px solid var(--sky);border-radius:999px;padding:9px 20px;background:linear-gradient(90deg,#0E2A66,#1A47A6);color:#fff;font-weight:800;font-size:12px;cursor:pointer}
+
+@media(prefers-reduced-motion:reduce){
+  .ring::before{animation:none}
+  .card{transition:none}
+  .submit{transition:none}
+}
+</style>
+</head>
+<body>
+
+<main class="page">
+
+  <div class="brand">
+    <img src="nurva-logo.png" alt="NURVA whale logo">
+    <div>
+      <div class="brand-name">NURVA</div>
+      <div class="brand-tag">Nurturing Digital Resilience for Families</div>
+    </div>
+  </div>
+
+  <div class="fit" id="fit">
+    <div class="fit-inner" id="fitInner">
+      <div class="stage">
+        <div class="disc" aria-hidden="true"></div>
+        <div class="ring" aria-hidden="true"></div>
+
+        <div class="card" id="card">
+
+          <!-- FRONT: LOGIN -->
+          <section class="face front" id="front">
+            <form class="form" id="loginForm" novalidate>
+              <h2>WELCOME</h2>
+              <p class="sub">Log in to your NURVA account</p>
+              <div class="selected-role" id="loginRoleBadge" hidden>
+                <span class="role-chip" id="loginRoleText"></span>
+                <a class="link" href="welcome.html">Change role</a>
+              </div>
+
+              <div class="field">
+                <input id="l-email" type="email" placeholder="Email Address" autocomplete="email" aria-label="Email address" required>
+              </div>
+              <div class="field">
+                <input id="l-pass" type="password" placeholder="Password" autocomplete="current-password" aria-label="Password" minlength="4" required>
+                <button class="eye" type="button" data-eye="l-pass" aria-label="Show password">◉</button>
+              </div>
+
+              <div class="roles" id="loginRoleOptions" role="radiogroup" aria-label="Role">
+                <label class="pill"><input type="radio" name="role-login" value="parent" checked><span>👨‍👩‍👧 Parent</span></label>
+                <label class="pill"><input type="radio" name="role-login" value="child"><span>🧒 Child</span></label>
+              </div>
+
+              <div class="options">
+                <label class="remember"><input type="checkbox" id="rememberMe"> Remember me</label>
+                <button class="link" type="button" id="forgotBtn">Forgot?</button>
+              </div>
+
+              <button class="submit" type="submit" id="l-submit">LOGIN</button>
+              <p class="notice" id="l-notice" role="status" aria-live="polite"></p>
+              <p class="switch">Don't have an account? <button class="link" type="button" id="showSignup">Sign Up</button></p>
+            </form>
+          </section>
+
+          <!-- BACK: SIGN UP -->
+          <section class="face back" id="back">
+            <form class="form" id="signupForm" novalidate>
+              <h2>JOIN NURVA</h2>
+              <p class="sub">Create your NURVA demo account</p>
+              <div class="selected-role" id="signupRoleBadge" hidden>
+                <span class="role-chip" id="signupRoleText"></span>
+                <a class="link" href="welcome.html">Change role</a>
+              </div>
+
+              <div class="field">
+                <input id="s-name" type="text" placeholder="Full Name" autocomplete="name" aria-label="Full name" required>
+              </div>
+              <div class="field">
+                <input id="s-email" type="email" placeholder="Email Address" autocomplete="email" aria-label="Email address" required>
+              </div>
+              <div class="field">
+                <input id="s-pass" type="password" placeholder="Password" autocomplete="new-password" aria-label="Password" minlength="4" required>
+                <button class="eye" type="button" data-eye="s-pass" aria-label="Show password">◉</button>
+              </div>
+
+              <div class="roles" id="signupRoleOptions" role="radiogroup" aria-label="Role">
+                <label class="pill"><input type="radio" name="role-signup" value="parent" checked><span>👨‍👩‍👧 Parent</span></label>
+                <label class="pill"><input type="radio" name="role-signup" value="child"><span>🧒 Child</span></label>
+              </div>
+
+              <button class="submit" type="submit" id="s-submit">CREATE ACCOUNT</button>
+              <p class="notice" id="s-notice" role="status" aria-live="polite"></p>
+              <p class="switch">Already have an account? <button class="link" type="button" id="showLogin">Log In</button></p>
+            </form>
+          </section>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    A gentle space for healthier digital habits.<br>
+    <strong>NURVA Team · SMA Sains Wahid Hasyim Yogyakarta</strong>
+  </div>
+
+</main>
+
+<!-- FORGOT PASSWORD MODAL -->
+<div class="modal-backdrop" id="forgotModal" role="dialog" aria-modal="true" aria-labelledby="forgotTitle">
+  <div class="modal">
+    <h3 id="forgotTitle">Forgot your password?</h3>
+    <p>This prototype does not use a real email service yet. Please contact your NURVA team administrator for help with your demo account.</p>
+    <button class="ok" type="button" id="closeModal">Got it</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var store = {
+    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+    del: function (k) { try { localStorage.removeItem(k); } catch (e) {} }
+  };
+
+  /* ---------- scale the 540px ring to fit small screens ---------- */
+  function fit() {
+    var s = Math.min(1, (window.innerWidth - 20) / 540);
+    $('fit').style.width = $('fit').style.height = (540 * s) + 'px';
+    $('fitInner').style.transform = 'scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit);
+  fit();
+
+  /* ---------- flip between login and sign up ---------- */
+  var card = $('card'), front = $('front'), back = $('back');
+  function flip(toSignup) {
+    card.classList.toggle('signup', toSignup);
+    front.inert = toSignup;  front.setAttribute('aria-hidden', String(toSignup));
+    back.inert = !toSignup;  back.setAttribute('aria-hidden', String(!toSignup));
+    $('l-notice').textContent = ''; $('s-notice').textContent = '';
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    setTimeout(function () { (toSignup ? $('s-name') : $('l-email')).focus(); }, reduce ? 0 : 520);
+  }
+  $('showSignup').addEventListener('click', function () { flip(true); });
+  $('showLogin').addEventListener('click', function () { flip(false); });
+  flip(false);
+  $('l-email').blur();
+
+  /* ---------- show / hide password ---------- */
+  document.querySelectorAll('[data-eye]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var input = $(btn.getAttribute('data-eye')), show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.textContent = show ? '◎' : '◉';
+      btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    });
+  });
+
+  /* ---------- forgot password ---------- */
+  var modal = $('forgotModal');
+  $('forgotBtn').addEventListener('click', function () { modal.classList.add('show'); });
+  $('closeModal').addEventListener('click', function () { modal.classList.remove('show'); });
+  modal.addEventListener('click', function (e) { if (e.target === modal) modal.classList.remove('show'); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') modal.classList.remove('show'); });
+
+  /* ---------- remembered email + role from the welcome page ---------- */
+  var savedEmail = store.get('nurva_remembered_email');
+  if (savedEmail) { $('l-email').value = savedEmail; $('rememberMe').checked = true; }
+
+  var preRole = store.get('nurva_role');
+  var hasChosenRole = preRole === 'parent' || preRole === 'child';
+  if (hasChosenRole) {
+    ['role-login', 'role-signup'].forEach(function (name) {
+      var r = document.querySelector('input[name="' + name + '"][value="' + preRole + '"]');
+      if (r) r.checked = true;
+    });
+    var roleLabel = preRole === 'child' ? '🧒 Child account' : '👨‍👩‍👧 Parent account';
+    $('loginRoleOptions').hidden = true;
+    $('signupRoleOptions').hidden = true;
+    $('loginRoleText').textContent = roleLabel;
+    $('signupRoleText').textContent = roleLabel;
+    $('loginRoleBadge').hidden = false;
+    $('signupRoleBadge').hidden = false;
+  }
+
+  function role(name) {
+    if (hasChosenRole) return preRole;
+    var selected = document.querySelector('input[name="' + name + '"]:checked');
+    return selected ? selected.value : 'parent';
+  }
+  function notify(id, msg, type) { var n = $(id); n.textContent = msg; n.className = 'notice ' + (type || 'error'); }
+
+  /* FRONTEND DEMO ONLY: this does not verify a real account or authenticate securely. */
+  function finish(email, r, name, noticeId, submitId, msg) {
+    store.set('nurva_user_email', email);
+    store.set('nurva_role', r);
+    if (name) store.set('nurva_user_name', name);
+    notify(noticeId, msg, 'success');
+    $(submitId).disabled = true;
+    setTimeout(function () {
+      window.location.href = r === 'child' ? 'child-dashboard.html' : 'parent-dashboard.html';
+    }, 800);
+  }
+
+  /* ---------- login ---------- */
+  $('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email = $('l-email').value.trim().toLowerCase(), pass = $('l-pass').value;
+    if (!email || !$('l-email').checkValidity()) { notify('l-notice', 'Please enter a valid email address.'); $('l-email').focus(); return; }
+    if (pass.length < 4) { notify('l-notice', 'Password must contain at least 4 characters.'); $('l-pass').focus(); return; }
+    if ($('rememberMe').checked) store.set('nurva_remembered_email', email); else store.del('nurva_remembered_email');
+    finish(email, role('role-login'), null, 'l-notice', 'l-submit', 'Login accepted for this prototype. Opening dashboard...');
+  });
+
+  /* ---------- sign up ---------- */
+  $('signupForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = $('s-name').value.trim(), email = $('s-email').value.trim().toLowerCase(), pass = $('s-pass').value;
+    if (!name) { notify('s-notice', 'Please enter your name first.'); $('s-name').focus(); return; }
+    if (!email || !$('s-email').checkValidity()) { notify('s-notice', 'Please enter a valid email address.'); $('s-email').focus(); return; }
+    if (pass.length < 4) { notify('s-notice', 'Password must contain at least 4 characters.'); $('s-pass').focus(); return; }
+    finish(email, role('role-signup'), name, 's-notice', 's-submit', 'Demo account created! Opening dashboard...');
+  });
+})();
+</script>
+</body>
+</html>

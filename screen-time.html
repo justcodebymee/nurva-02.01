@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NURVA - Screen Time Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EAF3FF;--surface:#FFFFFF;--primary:#2E6BF2;--primary-dark:#17399E;
+  --primary-light:#E6EFFE;--success:#2FA872;--success-bg:#E3F6EC;
+  --warning:#F0A93E;--warning-bg:#FFF2DD;--text:#182338;--muted:#6C7A93;
+  --border:#E2EAF8;--shadow:0 12px 30px rgba(23,57,158,.09);
+  --shadow-sm:0 4px 12px rgba(23,57,158,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);
+  font-family:'Plus Jakarta Sans',sans-serif;padding-bottom:100px;overflow-x:hidden}
+body:before,body:after{content:'';position:fixed;border-radius:50%;filter:blur(60px);
+  pointer-events:none;z-index:0}
+body:before{width:280px;height:280px;background:var(--success);opacity:.10;top:-60px;right:-80px}
+body:after{width:320px;height:320px;background:var(--warning);opacity:.08;bottom:50px;left:-100px}
+h1,h2,h3,p{margin:0}
+h1,h2,h3{font-family:'Baloo 2',sans-serif}
+button,input{font:inherit}
+.hero{position:relative;z-index:1;color:#fff;padding:20px 18px 48px;
+  border-radius:0 0 32px 32px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  box-shadow:0 14px 30px rgba(23,57,158,.22);overflow:visible}
+.hero:before{content:'';position:absolute;width:200px;height:200px;border-radius:50%;
+  background:rgba(255,255,255,.08);right:-55px;top:-90px}
+.hero-inner,.wrap{max-width:520px;margin:0 auto;position:relative;z-index:1}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:24px}
+.brand{display:flex;align-items:center;gap:9px}
+.brand-mark{width:42px;height:42px;flex:0 0 42px;border-radius:13px;background:#fff;
+  border:1px solid rgba(255,255,255,.65);display:grid;place-items:center;overflow:hidden;
+  box-shadow:0 4px 12px rgba(10,35,100,.14)}
+.brand-mark img{width:100%;height:100%;display:block;object-fit:cover}
+.brand-name{font-family:'Baloo 2';font-weight:700;font-size:18px}
+.actions{display:flex;align-items:center;gap:8px}
+.lang-switch{position:relative}
+.lang-btn,.back-btn{border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);
+  color:#fff;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer}
+.lang-menu{display:none;position:absolute;right:0;top:calc(100% + 8px);z-index:20;
+  min-width:180px;padding:6px;background:#fff;border:1px solid var(--border);
+  border-radius:14px;box-shadow:var(--shadow)}
+.lang-menu.open{display:block}
+.lang-menu button{display:block;width:100%;padding:10px;border:0;border-radius:9px;
+  text-align:left;background:#fff;color:var(--text);font-size:12px;cursor:pointer}
+.lang-menu button:hover{background:var(--primary-light)}
+.hero h1{font-size:27px;line-height:1.1;margin-bottom:6px}
+.hero p{font-size:12.5px;line-height:1.6;color:rgba(255,255,255,.84);max-width:330px}
+.wrap{padding:0 18px;margin-top:-27px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:22px;
+  box-shadow:var(--shadow-sm);padding:19px;margin-bottom:15px;position:relative}
+.card-title{font-family:'Baloo 2';font-size:17px;font-weight:700;margin-bottom:5px}
+.muted{color:var(--muted);font-size:12px;line-height:1.6}
+.usage-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.usage-emoji{width:48px;height:48px;border-radius:15px;background:var(--primary-light);
+  display:grid;place-items:center;font-size:24px}
+.usage-number{font-family:'Baloo 2';font-size:30px;font-weight:800;color:var(--primary-dark);margin-top:10px}
+.usage-caption{font-size:11px;color:var(--muted);font-weight:600}
+.progress-track{height:11px;border-radius:99px;background:#EDF2FA;overflow:hidden;margin:15px 0 9px}
+.progress-fill{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#4C8BFF,#2E6BF2);transition:width .3s}
+.progress-fill.warning{background:linear-gradient(90deg,#F5C46B,#E99A27)}
+.progress-fill.over{background:linear-gradient(90deg,#F18B83,#D94B4B)}
+.progress-meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted);font-weight:600}
+.status-note{margin-top:13px;padding:11px 12px;border-radius:13px;background:var(--success-bg);
+  color:#1F7C54;font-size:11.5px;line-height:1.55;font-weight:600}
+.status-note.warning{background:var(--warning-bg);color:#98600D}
+.limit-options{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:15px 0}
+.limit-option{border:1.5px solid var(--border);border-radius:14px;background:#fff;padding:12px 6px;
+  color:var(--text);cursor:pointer;text-align:center;transition:.15s}
+.limit-option strong{display:block;font-family:'Baloo 2';font-size:19px;color:var(--primary-dark)}
+.limit-option span{font-size:10px;color:var(--muted);font-weight:600}
+.limit-option.active{border-color:var(--primary);background:var(--primary-light);box-shadow:0 0 0 2px rgba(46,107,242,.08)}
+.custom-row{display:flex;align-items:center;gap:10px;margin-top:12px}
+.custom-row label{font-size:12px;font-weight:700;flex:1}
+.custom-input{width:105px;border:1.5px solid var(--border);border-radius:12px;padding:11px;
+  background:#fff;color:var(--text);font-weight:700;outline:none}
+.custom-input:focus{border-color:var(--primary)}
+.btn-primary{width:100%;border:0;border-radius:14px;padding:14px;background:var(--primary);
+  color:#fff;font-weight:800;font-size:13px;cursor:pointer;box-shadow:0 9px 18px rgba(46,107,242,.2);
+  margin-top:16px}
+.btn-primary:hover{background:var(--primary-dark)}
+.info-row{display:flex;gap:11px;align-items:flex-start;padding:11px 0}
+.info-row+.info-row{border-top:1px solid var(--border)}
+.info-icon{font-size:19px}
+.info-row strong{display:block;font-size:12px;margin-bottom:3px}
+.info-row p{font-size:11px;line-height:1.55;color:var(--muted)}
+.credit{text-align:center;color:var(--muted);font-size:10px;line-height:1.6;padding:12px 10px 22px}
+.bottom-nav{position:fixed;z-index:10;bottom:0;left:0;right:0;background:rgba(255,255,255,.96);
+  border-top:1px solid var(--border);display:flex;justify-content:center;padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+  backdrop-filter:blur(12px)}
+.nav-inner{width:100%;max-width:520px;display:flex;justify-content:space-around}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;
+  color:var(--muted);font-size:10px;font-weight:700;min-width:60px}
+.nav-item.active{color:var(--primary)}
+.nav-emoji{font-size:19px}
+.toast{position:fixed;z-index:30;left:50%;bottom:90px;transform:translate(-50%,15px);
+  background:var(--text);color:#fff;padding:11px 17px;border-radius:999px;font-size:12px;
+  font-weight:700;opacity:0;pointer-events:none;transition:.25s;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(min-width:600px){.hero{padding-left:24px;padding-right:24px}.wrap{padding-left:22px;padding-right:22px}}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <div class="topbar">
+      <div class="brand"><div class="brand-mark"><img src="nurva-logo.png" alt="Logo paus NURVA"></div><div class="brand-name">NURVA</div></div>
+      <div class="actions">
+        <div class="lang-switch">
+          <button class="lang-btn" onclick="toggleLangMenu()">🌐 <span id="langCode">EN</span></button>
+          <div class="lang-menu" id="langMenu">
+            <button onclick="setLang('en')">🇬🇧 English</button>
+            <button onclick="setLang('id')">🇮🇩 Bahasa Indonesia</button>
+          </div>
+        </div>
+        <button class="back-btn" onclick="goHome()" data-i18n="back">← Home</button>
+      </div>
+    </div>
+    <h1 data-i18n="pageTitle">Screen Time Settings ⏱️</h1>
+    <p data-i18n="pageSubtitle">Set a daily screen time limit to help your child build healthier digital habits.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="card">
+    <div class="usage-head">
+      <div>
+        <div class="card-title" data-i18n="todayUsage">Today's Screen Time</div>
+        <p class="muted" data-i18n="usageDesc">Usage recorded in the NURVA prototype</p>
+      </div>
+      <div class="usage-emoji">📱</div>
+    </div>
+    <div class="usage-number" id="usageValue">0 min</div>
+    <div class="usage-caption" data-i18n="usedToday">USED TODAY</div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-meta">
+      <span id="usagePercent">0% used</span>
+      <span id="limitCaption">Daily limit: 2 hours</span>
+    </div>
+    <div class="status-note" id="statusNote" data-i18n="withinLimit">Your child's recorded usage is within the daily limit.</div>
+  </section>
+
+  <section class="card">
+    <div class="card-title" data-i18n="setLimit">Set Daily Screen Time Limit</div>
+    <p class="muted" data-i18n="limitDesc">Choose how much screen time your child can have each day.</p>
+    <div class="limit-options" id="limitOptions">
+      <button class="limit-option" data-minutes="60" onclick="chooseLimit(60)"><strong>1 hr</strong><span data-i18n="perDay">per day</span></button>
+      <button class="limit-option" data-minutes="120" onclick="chooseLimit(120)"><strong>2 hrs</strong><span data-i18n="perDay">per day</span></button>
+      <button class="limit-option" data-minutes="180" onclick="chooseLimit(180)"><strong>3 hrs</strong><span data-i18n="perDay">per day</span></button>
+      <button class="limit-option" data-minutes="240" onclick="chooseLimit(240)"><strong>4 hrs</strong><span data-i18n="perDay">per day</span></button>
+      <button class="limit-option" data-minutes="300" onclick="chooseLimit(300)"><strong>5 hrs</strong><span data-i18n="perDay">per day</span></button>
+      <button class="limit-option" data-minutes="0" onclick="chooseLimit(0)"><strong>Custom</strong><span data-i18n="custom">custom</span></button>
+    </div>
+    <div class="custom-row">
+      <label for="customHours" data-i18n="customLabel">Custom limit (hours)</label>
+      <input class="custom-input" id="customHours" type="number" min="0.5" max="12" step="0.5" placeholder="e.g. 2.5" inputmode="decimal">
+    </div>
+    <button class="btn-primary" onclick="saveLimit()" data-i18n="saveLimit">Save Screen Time Limit</button>
+    <p class="muted" style="margin-top:10px" data-i18n="saveHint">Your setting is saved in this browser and can be read by other NURVA prototype pages.</p>
+  </section>
+
+  <section class="card">
+    <div class="card-title" data-i18n="rememberTitle">A Gentle Reminder 💙</div>
+    <div class="info-row">
+      <div class="info-icon">🤝</div><div><strong data-i18n="reminderOneTitle">Set limits together</strong><p data-i18n="reminderOne">Explain the reason for the limit and agree on a balanced daily routine.</p></div>
+    </div>
+    <div class="info-row">
+      <div class="info-icon">🌿</div><div><strong data-i18n="reminderTwoTitle">Make room for offline activities</strong><p data-i18n="reminderTwo">Encourage time for rest, learning, hobbies, and family activities.</p></div>
+    </div>
+    <div class="info-row">
+      <div class="info-icon">💬</div><div><strong data-i18n="reminderThreeTitle">Review when needed</strong><p data-i18n="reminderThree">Adjust the limit when your child's needs or daily schedule change.</p></div>
+    </div>
+  </section>
+
+  <div class="credit">🛡️ NURVA Team — SMA Sains Wahid Hasyim Yogyakarta<br>
+    <span data-i18n="footerNote">Educational prototype. Screen time shown here is based on data recorded in the prototype, not automatic device monitoring.</span>
+  </div>
+</main>
+
+<nav class="bottom-nav">
+  <div class="nav-inner">
+    <a class="nav-item" href="parent-dashboard.html"><span class="nav-emoji">🏠</span><span data-i18n="navHome">Home</span></a>
+    <a class="nav-item" href="activity-report.html"><span class="nav-emoji">📊</span><span data-i18n="navReport">Report</span></a>
+    <a class="nav-item" href="parenting-insight.html"><span class="nav-emoji">📖</span><span data-i18n="navTips">Tips</span></a>
+    <a class="nav-item" href="profile.html"><span class="nav-emoji">👤</span><span data-i18n="navProfile">Profile</span></a>
+  </div>
+</nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const I18N = {
+  en:{
+    back:'← Home',pageTitle:'Screen Time Settings ⏱️',
+    pageSubtitle:"Set a daily screen time limit to help your child build healthier digital habits.",
+    todayUsage:"Today's Screen Time",usageDesc:'Usage recorded in the NURVA prototype',
+    usedToday:'USED TODAY',setLimit:'Set Daily Screen Time Limit',
+    limitDesc:'Choose how much screen time your child can have each day.',
+    perDay:'per day',custom:'custom',customLabel:'Custom limit (hours)',
+    saveLimit:'Save Screen Time Limit',
+    saveHint:'Your setting is saved in this browser and can be read by other NURVA prototype pages.',
+    rememberTitle:'A Gentle Reminder 💙',reminderOneTitle:'Set limits together',
+    reminderOne:'Explain the reason for the limit and agree on a balanced daily routine.',
+    reminderTwoTitle:'Make room for offline activities',
+    reminderTwo:'Encourage time for rest, learning, hobbies, and family activities.',
+    reminderThreeTitle:'Review when needed',
+    reminderThree:"Adjust the limit when your child's needs or daily schedule change.",
+    footerNote:'Educational prototype. Screen time shown here is based on data recorded in the prototype, not automatic device monitoring.',
+    navHome:'Home',navReport:'Report',navTips:'Tips',navProfile:'Profile',
+    used:'used',dailyLimit:'Daily limit',within:'Your child’s recorded usage is within the daily limit.',
+    near:'Your child is getting close to the daily limit.',over:'The recorded usage has reached or passed the daily limit.',
+    saved:'Screen time limit saved!',invalid:'Please enter a limit between 0.5 and 12 hours.',
+    choose:'Choose a limit first.'
+  },
+  id:{
+    back:'← Beranda',pageTitle:'Pengaturan Screen Time ⏱️',
+    pageSubtitle:'Atur batas waktu layar harian untuk membantu anak membangun kebiasaan digital yang lebih sehat.',
+    todayUsage:'Waktu Layar Hari Ini',usageDesc:'Penggunaan yang tercatat di prototype NURVA',
+    usedToday:'DIGUNAKAN HARI INI',setLimit:'Atur Batas Waktu Layar Harian',
+    limitDesc:'Pilih berapa lama anak boleh menggunakan perangkat setiap hari.',
+    perDay:'per hari',custom:'atur sendiri',customLabel:'Batas khusus (jam)',
+    saveLimit:'Simpan Batas Screen Time',
+    saveHint:'Pengaturan tersimpan di browser ini dan dapat dibaca oleh halaman prototype NURVA lainnya.',
+    rememberTitle:'Pengingat Kecil 💙',reminderOneTitle:'Tentukan batas bersama',
+    reminderOne:'Jelaskan alasan batas waktu dan sepakati rutinitas harian yang seimbang.',
+    reminderTwoTitle:'Sediakan waktu untuk aktivitas offline',
+    reminderTwo:'Ajak anak meluangkan waktu untuk istirahat, belajar, hobi, dan kegiatan keluarga.',
+    reminderThreeTitle:'Evaluasi jika diperlukan',
+    reminderThree:'Sesuaikan batas waktu saat kebutuhan atau jadwal harian anak berubah.',
+    footerNote:'Prototype edukasi. Waktu layar di sini berdasarkan data yang tercatat di prototype, bukan pemantauan perangkat otomatis.',
+    navHome:'Beranda',navReport:'Laporan',navTips:'Tips',navProfile:'Profil',
+    used:'terpakai',dailyLimit:'Batas harian',within:'Penggunaan anak yang tercatat masih dalam batas harian.',
+    near:'Penggunaan anak sudah mendekati batas harian.',over:'Penggunaan yang tercatat sudah mencapai atau melewati batas harian.',
+    saved:'Batas waktu layar berhasil disimpan!',invalid:'Masukkan batas antara 0,5 sampai 12 jam.',
+    choose:'Pilih batas waktu terlebih dahulu.'
+  }
+};
+let currentLang = localStorage.getItem('nurva_lang') || 'en';
+let selectedMinutes = null;
+
+function t(key){return (I18N[currentLang]||I18N.en)[key] || I18N.en[key] || key;}
+function applyLanguage(){
+  document.documentElement.lang=currentLang;
+  document.getElementById('langCode').textContent=currentLang.toUpperCase();
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key=el.getAttribute('data-i18n'); if(t(key)) el.textContent=t(key);
+  });
+  renderUsage();
+}
+function toggleLangMenu(){document.getElementById('langMenu').classList.toggle('open');}
+function setLang(lang){
+  currentLang=lang==='id'?'id':'en';
+  localStorage.setItem('nurva_lang',currentLang);
+  document.getElementById('langMenu').classList.remove('open');
+  applyLanguage();
+}
+function goHome(){window.location.href='parent-dashboard.html';}
+function chooseLimit(minutes){
+  selectedMinutes=minutes;
+  document.querySelectorAll('.limit-option').forEach(btn=>{
+    btn.classList.toggle('active',Number(btn.dataset.minutes)===minutes);
+  });
+  if(minutes>0) document.getElementById('customHours').value='';
+  else document.getElementById('customHours').focus();
+}
+function formatDuration(minutes){
+  const h=Math.floor(minutes/60),m=minutes%60;
+  if(h&&m) return currentLang==='id'?`${h} jam ${m} menit`:`${h}h ${m}m`;
+  if(h) return currentLang==='id'?`${h} jam`:`${h} ${h===1?'hour':'hours'}`;
+  return currentLang==='id'?`${m} menit`:`${m} min`;
+}
+function renderUsage(){
+  const usageRaw=parseInt(localStorage.getItem('nurva_screen_time_minutes')||'0',10);
+  const usage=Number.isFinite(usageRaw)&&usageRaw>0?usageRaw:0;
+  const limitRaw=parseInt(localStorage.getItem('nurva_screen_limit_minutes')||'120',10);
+  const baseLimit=Number.isFinite(limitRaw)&&limitRaw>0?limitRaw:120;
+  let bonus=0;
+  try{
+    const savedBonus=JSON.parse(localStorage.getItem('nurva_bonus_today')||'null');
+    if(savedBonus && savedBonus.date===new Date().toDateString()) bonus=Math.max(0,parseInt(savedBonus.mins||'0',10)||0);
+  }catch(e){}
+  const limit=baseLimit+bonus;
+  const pct=Math.round(usage/limit*100);
+  const safePct=Math.min(100,pct);
+  document.getElementById('usageValue').textContent=formatDuration(usage);
+  document.getElementById('usagePercent').textContent=`${pct}% ${t('used')}`;
+  document.getElementById('limitCaption').textContent = bonus>0
+    ? (currentLang==='id' ? `${t('dailyLimit')}: ${formatDuration(limit)} (termasuk bonus ${formatDuration(bonus)})` : `${t('dailyLimit')}: ${formatDuration(limit)} (including ${formatDuration(bonus)} bonus)`)
+    : `${t('dailyLimit')}: ${formatDuration(limit)}`;
+  const fill=document.getElementById('progressFill');
+  fill.style.width=safePct+'%';
+  fill.classList.toggle('warning',pct>=75&&pct<100);
+  fill.classList.toggle('over',pct>=100);
+  const note=document.getElementById('statusNote');
+  note.classList.toggle('warning',pct>=75);
+  note.textContent=pct>=100?t('over'):(pct>=75?t('near'):t('within'));
+}
+function saveLimit(){
+  let minutes=selectedMinutes;
+  const custom=document.getElementById('customHours').value.trim();
+  if(custom!==''){
+    const hours=Number(custom);
+    if(!Number.isFinite(hours)||hours<0.5||hours>12){
+      alert(t('invalid'));return;
+    }
+    minutes=Math.round(hours*60);
+  }
+  if(!minutes||minutes<30||minutes>720){alert(t('choose'));return;}
+  localStorage.setItem('nurva_screen_limit_minutes',String(minutes));
+  selectedMinutes=minutes;
+  document.querySelectorAll('.limit-option').forEach(btn=>{
+    btn.classList.toggle('active',Number(btn.dataset.minutes)===minutes);
+  });
+  renderUsage();
+  showToast(t('saved'));
+}
+function showToast(message){
+  const toast=document.getElementById('toast');
+  toast.textContent=message;toast.classList.add('show');
+  clearTimeout(window.nurvaToastTimer);
+  window.nurvaToastTimer=setTimeout(()=>toast.classList.remove('show'),2300);
+}
+function init(){
+  const saved=parseInt(localStorage.getItem('nurva_screen_limit_minutes')||'120',10);
+  if([60,120,180,240,300].includes(saved)) chooseLimit(saved);
+  else if(saved>=30&&saved<=720){
+    chooseLimit(0);document.getElementById('customHours').value=(saved/60).toString();
+  }else chooseLimit(120);
+  applyLanguage();
+  window.addEventListener('storage',e=>{
+    if(e.key==='nurva_screen_time_minutes'||e.key==='nurva_screen_limit_minutes'||e.key==='nurva_bonus_today') renderUsage();
+  });
+  document.addEventListener('click',e=>{
+    const menu=document.getElementById('langMenu');
+    if(!e.target.closest('.lang-switch')) menu.classList.remove('open');
+  });
+}
+init();
+</script>
+</body>
+</html>

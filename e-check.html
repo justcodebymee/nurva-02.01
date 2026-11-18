@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NURVA - E-Check Recommendations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EAF3FF;--surface:#FFFFFF;--primary:#2E6BF2;--primary-dark:#17399E;--primary-light:#E6EFFE;
+    --success:#2FA872;--success-dark:#1F7C54;--success-bg:#E3F6EC;
+    --warning:#F0A93E;--warning-dark:#B0700E;--warning-bg:#FFF2DD;
+    --text:#182338;--muted:#6C7A93;--border:#E2EAF8;
+    --radius-lg:24px;--radius-md:16px;
+    --shadow:0 12px 30px rgba(23,57,158,0.09);--shadow-sm:0 4px 12px rgba(23,57,158,0.06);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);padding-bottom:60px;position:relative;overflow-x:hidden;}
+  body::before,body::after{content:'';position:fixed;border-radius:50%;filter:blur(60px);pointer-events:none;z-index:0;}
+  body::before{width:260px;height:260px;background:var(--success);opacity:.10;top:-60px;right:-80px;}
+  body::after{width:280px;height:280px;background:var(--warning);opacity:.08;bottom:20px;left:-100px;}
+  h1,h2,h3,h4{font-family:'Baloo 2',sans-serif;margin:0;}
+  .wrap{max-width:520px;margin:0 auto;padding:0 18px;position:relative;z-index:1;}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+  .fu{animation:fadeUp .5s cubic-bezier(.2,.7,.3,1) both;}
+
+  .hero{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);border-radius:0 0 32px 32px;padding:18px 18px 66px;position:relative;overflow:hidden;box-shadow:0 14px 30px rgba(23,57,158,0.22);}
+  .hero-inner{max-width:520px;margin:0 auto;position:relative;z-index:1;}
+  .topbar{display:flex;align-items:center;gap:12px;}
+  .back-btn{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;text-decoration:none;flex-shrink:0;}
+  .back-btn:hover{background:rgba(255,255,255,0.25);}
+  .hero-title{color:#fff;font-size:20px;}
+  .lang-switch{position:relative;margin-left:auto;}
+  .lang-btn{display:flex;align-items:center;gap:5px;border:1px solid rgba(255,255,255,0.35);background:rgba(255,255,255,0.1);color:#fff;font-size:12px;font-weight:700;padding:7px 11px;border-radius:999px;cursor:pointer;}
+  .lang-menu{display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border-radius:16px;box-shadow:var(--shadow);border:1px solid var(--border);padding:6px;min-width:190px;z-index:20;}
+  .lang-menu.open{display:block;}
+  .lang-option{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 11px;border-radius:11px;font-size:12.5px;font-weight:600;color:var(--text);cursor:pointer;}
+  .lang-option:hover{background:var(--primary-light);}
+  .lang-option.active{background:var(--primary-light);color:var(--primary-dark);}
+  .lang-option.disabled{color:var(--muted);cursor:not-allowed;}
+  .lang-soon{font-size:9px;font-weight:700;background:var(--warning-bg);color:var(--warning-dark);padding:2px 6px;border-radius:999px;}
+  .hero-sub{color:rgba(255,255,255,.82);font-size:12.5px;font-weight:500;margin:10px 0 0;max-width:340px;}
+  .overlap{margin-top:-52px;}
+
+  .card{background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow);border:1px solid var(--border);padding:20px;margin-bottom:16px;}
+  .card-title{font-size:15px;font-weight:700;font-family:'Baloo 2',sans-serif;margin-bottom:4px;}
+  .card-sub{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:14px;line-height:1.6;}
+
+  .field-row{display:flex;gap:10px;margin-bottom:12px;}
+  .field-col{flex:1;}
+  .field-label{font-size:11.5px;font-weight:700;color:var(--muted);margin-bottom:6px;display:block;}
+  .field-input,.field-select{width:100%;border:1.5px solid var(--border);border-radius:12px;padding:11px 13px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13.5px;font-weight:600;background:#FAFCFF;color:var(--text);}
+  .field-input:focus,.field-select:focus{outline:none;border-color:var(--primary);}
+
+  .gender-picker{display:flex;gap:8px;}
+  .gender-opt{flex:1;border:1.5px solid var(--border);border-radius:12px;padding:10px 6px;text-align:center;cursor:pointer;font-size:11.5px;font-weight:700;color:var(--muted);background:#FAFCFF;transition:all .15s ease;}
+  .gender-opt .g-icon{font-size:20px;display:block;margin-bottom:3px;}
+  .gender-opt.active{border-color:var(--primary);background:var(--primary-light);color:var(--primary-dark);}
+
+  .btn{width:100%;border:none;border-radius:14px;padding:13px;font-weight:700;font-size:13.5px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;background:var(--primary);color:#fff;margin-top:4px;}
+  .btn:hover{background:var(--primary-dark);}
+
+  .result-wrap{display:none;}
+  .result-wrap.show{display:block;}
+
+  .profile-strip{display:flex;align-items:center;gap:12px;background:var(--primary-light);border-radius:16px;padding:12px 14px;margin-bottom:16px;}
+  .profile-avatar{width:44px;height:44px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;box-shadow:var(--shadow-sm);}
+  .profile-strip-text{flex:1;}
+  .profile-strip-name{font-weight:700;font-size:13.5px;color:var(--primary-dark);}
+  .profile-strip-sub{font-size:11.5px;color:var(--primary-dark);opacity:.75;font-weight:600;}
+
+  .rec-limit{text-align:center;padding:6px 0 4px;}
+  .rec-limit .val{font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:700;color:var(--primary-dark);line-height:1.3;}
+  .rec-limit .lbl{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:2px;}
+
+  .tag-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+  .tag-chip{display:flex;align-items:center;gap:6px;background:var(--success-bg);color:var(--success-dark);font-size:11.5px;font-weight:700;padding:7px 12px;border-radius:999px;}
+
+  .tip-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);}
+  .tip-row:last-child{border-bottom:none;}
+  .tip-row .t-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+  .tip-row .t-text{font-size:12.5px;color:var(--text);font-weight:500;line-height:1.6;}
+
+  .disclaimer{display:flex;gap:9px;align-items:flex-start;background:var(--warning-bg);border-radius:14px;padding:12px 13px;margin-top:4px;font-size:11px;color:var(--warning-dark);font-weight:600;line-height:1.65;}
+
+  .empty-hint{text-align:center;color:var(--muted);font-size:12.5px;font-weight:500;padding:6px 4px 2px;line-height:1.6;}
+
+  .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:var(--text);color:#fff;padding:11px 20px;border-radius:999px;font-size:13px;font-weight:600;opacity:0;transition:all .25s ease;pointer-events:none;z-index:50;box-shadow:0 8px 20px rgba(0,0,0,.2);text-align:center;max-width:80vw;}
+  .toast.show{opacity:1;transform:translate(-50%,0);}
+
+  .credit{text-align:center;font-size:10.5px;color:var(--muted);padding:8px 10px 0;font-weight:500;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="topbar">
+      <a class="back-btn" href="javascript:history.back()">←</a>
+      <div class="hero-title" data-i18n="pageTitle">E-Check Recommendations</div>
+      <div class="lang-switch">
+        <button class="lang-btn" onclick="toggleLangMenu()">🌐 <span id="langCode">EN</span></button>
+        <div class="lang-menu" id="langMenu">
+          <div class="lang-option" id="langOptEn" onclick="setLang('en')">🇬🇧 English</div>
+          <div class="lang-option" id="langOptId" onclick="setLang('id')">🇮🇩 Bahasa Indonesia</div>
+          <div class="lang-option disabled">🇪🇸 Español <span class="lang-soon">Soon</span></div>
+          <div class="lang-option disabled">🇫🇷 Français <span class="lang-soon">Soon</span></div>
+          <div class="lang-option disabled">🇨🇳 中文 <span class="lang-soon">Soon</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="hero-sub" data-i18n="pageSub">Quick check-in on your child's profile to get screen time & content guidance suited to them.</p>
+  </div>
+</div>
+
+<div class="wrap overlap">
+
+  <div class="card fu" style="animation-delay:.05s">
+    <div class="card-title" data-i18n="formTitle">Your child's profile</div>
+    <div class="card-sub" data-i18n="formSub">Used only to tailor the recommendations below — you can update it anytime.</div>
+
+    <div class="field-row">
+      <div class="field-col">
+        <label class="field-label" data-i18n="nameLabel">Child's name</label>
+        <input class="field-input" type="text" id="childNameInput" data-i18n-placeholder="namePlaceholder" placeholder="e.g. Kirana">
+      </div>
+      <div class="field-col">
+        <label class="field-label" data-i18n="ageLabel">Age</label>
+        <input class="field-input" type="number" id="childAgeInput" min="1" max="18" data-i18n-placeholder="agePlaceholder" placeholder="e.g. 9">
+      </div>
+    </div>
+
+    <label class="field-label" data-i18n="genderLabel">Gender</label>
+    <div class="gender-picker" id="genderPicker">
+      <div class="gender-opt" data-val="boy" onclick="pickGender('boy')"><span class="g-icon">👦</span><span data-i18n="genderBoy">Boy</span></div>
+      <div class="gender-opt" data-val="girl" onclick="pickGender('girl')"><span class="g-icon">👧</span><span data-i18n="genderGirl">Girl</span></div>
+      <div class="gender-opt" data-val="other" onclick="pickGender('other')"><span class="g-icon">🧒</span><span data-i18n="genderOther">Prefer not to say</span></div>
+    </div>
+
+    <button class="btn" onclick="runCheck()" data-i18n="checkBtn" style="margin-top:16px;">🔎 Get recommendations</button>
+  </div>
+
+  <div class="result-wrap" id="resultWrap">
+    <div class="card fu">
+      <div class="profile-strip">
+        <div class="profile-avatar" id="resultAvatar">🧒</div>
+        <div class="profile-strip-text">
+          <div class="profile-strip-name" id="resultName">—</div>
+          <div class="profile-strip-sub" id="resultBracket">—</div>
+        </div>
+      </div>
+
+      <div class="rec-limit">
+        <div class="val" id="resultLimit">—</div>
+        <div class="lbl" data-i18n="limitLbl">Recommended daily screen time</div>
+      </div>
+
+      <div class="card-title" style="margin-top:16px;font-size:13.5px;" data-i18n="categoriesTitle">Suggested content categories</div>
+      <div class="tag-list" id="tagList"></div>
+    </div>
+
+    <div class="card fu">
+      <div class="card-title" data-i18n="tipsTitle">Tips for this age</div>
+      <div id="tipList"></div>
+    </div>
+
+    <div class="disclaimer">
+      <span>ℹ️</span>
+      <span data-i18n="disclaimer">These recommendations are general guidance based on child digital-wellbeing guidelines (WHO/IDAI) and your child's age. Gender is only used to personalize the avatar above — every category and tip here applies equally to any child. This does not replace advice from a pediatrician or child psychologist.</span>
+    </div>
+  </div>
+
+  <div class="card fu" id="emptyCard">
+    <div class="empty-hint" data-i18n="emptyHint">Fill in your child's age above and tap "Get recommendations" to see personalized guidance.</div>
+  </div>
+
+  <div class="credit">
+    🛡️ NURVA Team — SMA Sains Wahid Hasyim Yogyakarta<br>
+    <span data-i18n="footerNote">Educational prototype referencing Indonesian Government Regulation No. 17 of 2025 on Child Protection in the Digital Space.</span>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const I18N = {
+  en:{
+    pageTitle:"E-Check Recommendations",
+    pageSub:"Quick check-in on your child's profile to get screen time & content guidance suited to them.",
+    formTitle:"Your child's profile",
+    formSub:"Used only to tailor the recommendations below — you can update it anytime.",
+    nameLabel:"Child's name", namePlaceholder:"e.g. Kirana",
+    ageLabel:"Age", agePlaceholder:"e.g. 9",
+    genderLabel:"Gender",
+    genderBoy:"Boy", genderGirl:"Girl", genderOther:"Prefer not to say",
+    checkBtn:"🔎 Get recommendations",
+    limitLbl:"Recommended daily screen time",
+    categoriesTitle:"Suggested content categories",
+    tipsTitle:"Tips for this age",
+    disclaimer:"These recommendations are general guidance based on child digital-wellbeing guidelines (WHO/IDAI) and your child's age. Gender is only used to personalize the avatar above — every category and tip here applies equally to any child. This does not replace advice from a pediatrician or child psychologist.",
+    emptyHint:"Fill in your child's age above and tap \"Get recommendations\" to see personalized guidance.",
+    footerNote:"Educational prototype referencing Indonesian Government Regulation No. 17 of 2025 on Child Protection in the Digital Space.",
+    ageRequired:"Please enter your child's age (1–18).",
+    savedToast:"Profile saved — here are your recommendations!",
+    defaultName:"Your child",
+    brackets:[
+      {max:1, label:"Under 2 years old", limit:"Avoid screen time (except video calls)",
+        tags:["📞 Video calls with family"],
+        tips:["Screen time isn't recommended at this age, except for video calls with familiar people.","Prioritize real-world play, talking, and reading together — this builds language and bonding fastest."]},
+      {max:4, label:"2–4 years old", limit:"Up to 1 hour/day, watched together with a parent",
+        tags:["📺 Educational shows","🧩 Simple learning apps","🎵 Music & singing"],
+        tips:["Watch together and talk about what you see — co-viewing turns screen time into learning time.","Avoid screens for at least 1 hour before bedtime to protect sleep."]},
+      {max:8, label:"5–8 years old", limit:"1–2 hours/day on school days",
+        tags:["📚 Educational apps","🎨 Creative & drawing apps","🕹️ Age-appropriate games","📞 Family video calls"],
+        tips:["Balance screen time with outdoor play and reading books together.","Set consistent screen-free times, like during meals and right before bed."]},
+      {max:12, label:"9–12 years old", limit:"Up to 2 hours/day for recreation, plus school needs",
+        tags:["📚 Educational content","🎼 Creative tools (art, music, coding)","⚽ Sports & active games","💬 Moderated messaging"],
+        tips:["Talk openly about what they watch and who they interact with online.","Encourage a healthy mix of online and offline hobbies — sports, music, hanging out with friends."]},
+      {max:18, label:"13–17 years old", limit:"A consistent daily limit agreed together, with sleep & school prioritized",
+        tags:["🎓 Educational & career content","🎨 Creative platforms","🏃 Sports/fitness apps","📱 Social media (settings reviewed together)"],
+        tips:["Involve them in setting their own limits — it builds trust and self-regulation.","Watch for signs of sleep disruption or social withdrawal, and check in regularly without judgment."]}
+    ]
+  },
+  id:{
+    pageTitle:"Rekomendasi E-Check",
+    pageSub:"Isi profil singkat anak untuk mendapatkan panduan screen time & kategori konten yang sesuai.",
+    formTitle:"Profil anak",
+    formSub:"Hanya dipakai untuk menyesuaikan rekomendasi di bawah — bisa diubah kapan saja.",
+    nameLabel:"Nama anak", namePlaceholder:"mis. Kirana",
+    ageLabel:"Usia", agePlaceholder:"mis. 9",
+    genderLabel:"Jenis kelamin",
+    genderBoy:"Laki-laki", genderGirl:"Perempuan", genderOther:"Tidak ingin menyebutkan",
+    checkBtn:"🔎 Lihat rekomendasi",
+    limitLbl:"Rekomendasi screen time harian",
+    categoriesTitle:"Rekomendasi kategori konten",
+    tipsTitle:"Tips untuk usia ini",
+    disclaimer:"Rekomendasi ini bersifat panduan umum berdasarkan pedoman kesehatan digital anak (WHO/IDAI) dan usia anak Anda. Jenis kelamin hanya dipakai untuk personalisasi avatar di atas — semua kategori dan tips di sini berlaku sama untuk semua anak. Ini bukan pengganti saran dokter anak atau psikolog anak.",
+    emptyHint:"Isi usia anak di atas lalu tekan \"Lihat rekomendasi\" untuk melihat panduan yang sesuai.",
+    footerNote:"Prototype edukasi mengacu PP Nomor 17 Tahun 2025 tentang Perlindungan Anak di Ranah Digital.",
+    ageRequired:"Masukkan usia anak (1–18).",
+    savedToast:"Profil tersimpan — ini rekomendasi untukmu!",
+    defaultName:"Anak Anda",
+    brackets:[
+      {max:1, label:"Di bawah 2 tahun", limit:"Hindari screen time (kecuali video call)",
+        tags:["📞 Video call dengan keluarga"],
+        tips:["Screen time belum disarankan di usia ini, kecuali untuk video call dengan orang yang dikenal.","Utamakan bermain langsung, mengobrol, dan membaca bersama — ini paling efektif untuk bahasa dan kedekatan."]},
+      {max:4, label:"2–4 tahun", limit:"Maksimal 1 jam/hari, ditemani orang tua",
+        tags:["📺 Tayangan edukatif","🧩 Aplikasi belajar sederhana","🎵 Musik & bernyanyi"],
+        tips:["Tonton bersama dan ajak ngobrol soal apa yang dilihat — ini mengubah screen time jadi waktu belajar.","Hindari layar minimal 1 jam sebelum tidur agar tidurnya tidak terganggu."]},
+      {max:8, label:"5–8 tahun", limit:"1–2 jam/hari di hari sekolah",
+        tags:["📚 Aplikasi edukasi","🎨 Aplikasi kreatif & menggambar","🕹️ Game sesuai usia","📞 Video call keluarga"],
+        tips:["Seimbangkan screen time dengan main di luar dan membaca buku bersama.","Tetapkan waktu bebas layar yang konsisten, seperti saat makan dan menjelang tidur."]},
+      {max:12, label:"9–12 tahun", limit:"Maksimal 2 jam/hari untuk hiburan, plus kebutuhan sekolah",
+        tags:["📚 Konten edukasi","🎼 Alat kreatif (seni, musik, coding)","⚽ Olahraga & game aktif","💬 Pesan yang dipantau"],
+        tips:["Ajak ngobrol terbuka soal apa yang ditonton dan siapa saja yang mereka ajak bicara online.","Dorong keseimbangan hobi online dan offline — olahraga, musik, main bareng teman."]},
+      {max:18, label:"13–17 tahun", limit:"Batas harian yang disepakati bersama, dengan prioritas tidur & sekolah",
+        tags:["🎓 Konten edukasi & karier","🎨 Platform kreatif","🏃 Aplikasi olahraga/fitness","📱 Media sosial (pengaturan ditinjau bersama)"],
+        tips:["Libatkan mereka dalam menentukan batasnya sendiri — ini membangun kepercayaan dan kemampuan mengatur diri.","Perhatikan tanda gangguan tidur atau menarik diri secara sosial, dan cek kabar rutin tanpa menghakimi."]}
+    ]
+  }
+};
+let currentLang = localStorage.getItem('nurva_lang') || 'en';
+let selectedGender = localStorage.getItem('nurva_child_gender') || '';
+function t(key){ const d=I18N[currentLang]||I18N.en; return d[key]; }
+function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2200); }
+function toggleLangMenu(){ document.getElementById('langMenu').classList.toggle('open'); }
+document.addEventListener('click',e=>{ const w=document.querySelector('.lang-switch'); if(w && !w.contains(e.target)) document.getElementById('langMenu').classList.remove('open'); });
+function setLang(lang){ currentLang=lang; localStorage.setItem('nurva_lang',lang); render(); if(document.getElementById('resultWrap').classList.contains('show')) runCheck(true); document.getElementById('langMenu').classList.remove('open'); }
+
+function pickGender(val){
+  selectedGender=val;
+  document.querySelectorAll('.gender-opt').forEach(el=>el.classList.toggle('active', el.getAttribute('data-val')===val));
+}
+
+function bracketForAge(age){
+  const dict=I18N[currentLang]||I18N.en;
+  for(const b of dict.brackets){ if(age<=b.max) return b; }
+  return dict.brackets[dict.brackets.length-1];
+}
+
+function avatarForGender(g){
+  return g==='boy' ? '👦' : g==='girl' ? '👧' : '🧒';
+}
+
+function runCheck(silent){
+  const dict=I18N[currentLang]||I18N.en;
+  const name=document.getElementById('childNameInput').value.trim();
+  const age=parseInt(document.getElementById('childAgeInput').value,10);
+
+  if(!age || age<1 || age>18){
+    if(!silent) toast(dict.ageRequired);
+    return;
+  }
+
+  localStorage.setItem('nurva_child_name_echeck', name);
+  localStorage.setItem('nurva_child_age', String(age));
+  if(selectedGender) localStorage.setItem('nurva_child_gender', selectedGender);
+
+  const bracket=bracketForAge(age);
+  document.getElementById('resultAvatar').textContent=avatarForGender(selectedGender);
+  document.getElementById('resultName').textContent = name || dict.defaultName;
+  document.getElementById('resultBracket').textContent = `${bracket.label} · ${age} ${currentLang==='id'?'tahun':'yo'}`;
+  document.getElementById('resultLimit').textContent = bracket.limit;
+
+  const tagWrap=document.getElementById('tagList');
+  tagWrap.innerHTML='';
+  bracket.tags.forEach(tag=>{
+    const chip=document.createElement('div'); chip.className='tag-chip'; chip.textContent=tag;
+    tagWrap.appendChild(chip);
+  });
+
+  const tipWrap=document.getElementById('tipList');
+  tipWrap.innerHTML='';
+  bracket.tips.forEach(tip=>{
+    const row=document.createElement('div'); row.className='tip-row';
+    row.innerHTML=`<span class="t-icon">💡</span><span class="t-text">${tip}</span>`;
+    tipWrap.appendChild(row);
+  });
+
+  document.getElementById('resultWrap').classList.add('show');
+  document.getElementById('emptyCard').style.display='none';
+  if(!silent) toast(dict.savedToast);
+}
+
+function render(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ const v=t(el.getAttribute('data-i18n')); if(v!==undefined) el.textContent=v; });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{ const v=t(el.getAttribute('data-i18n-placeholder')); if(v!==undefined) el.setAttribute('placeholder',v); });
+  document.getElementById('langCode').textContent=currentLang.toUpperCase();
+  document.getElementById('langOptEn').classList.toggle('active',currentLang==='en');
+  document.getElementById('langOptId').classList.toggle('active',currentLang==='id');
+  document.documentElement.lang=currentLang;
+
+  const savedName=localStorage.getItem('nurva_child_name_echeck');
+  const savedAge=localStorage.getItem('nurva_child_age');
+  if(savedName) document.getElementById('childNameInput').value=savedName;
+  if(savedAge) document.getElementById('childAgeInput').value=savedAge;
+  if(selectedGender) pickGender(selectedGender);
+}
+render();
+</script>
+</body>
+</html>
